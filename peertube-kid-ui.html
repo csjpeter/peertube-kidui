@@ -3,106 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; media-src 'self' blob: data:; script-src 'self' blob:; script-src-attr 'self' 'unsafe-inline' blob:; script-src-elem 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline';">-->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src     'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      media-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      img-src         'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      font-src        'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      worker-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      script-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      script-src-attr 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      style-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+      style-src-elem  'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+    ">
     <title>Kid-Friendly PeerTube</title>
     <script>
-        const styles = `
-            body { display: flex; margin: 0; font-family: Arial, sans-serif; background: #f0f0f0; }
-            #sidebar { width: 250px; background: #2c3e50; color: white; padding: 10px; overflow-y: auto; }
-            #sidebar button { width: 100%; padding: 10px; margin-bottom: 5px; border: none; background: #3498db; color: white; cursor: pointer; }
-            #sidebar button:hover { background: #2980b9; }
-            #main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 10px; }
-            #video-list { display: flex; flex-wrap: wrap; gap: 10px; }
-            .video-item { width: 200px; cursor: pointer; text-align: center; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-            .video-item img { width: 100%; border-radius: 5px; }
-            .video-item:hover { background: #ecf0f1; }
-            #player-container { display: none; align-items: center; justify-content: center; }
-            video { width: 90%; height: 80vh; background: black; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.5); }
-        `;
-        const styleSheet = document.createElement("style");
-        styleSheet.type = "text/css";
-        styleSheet.innerText = styles;
-        document.head.appendChild(styleSheet);
+        document.addEventListener("DOMContentLoaded", function() {
+            const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
+            const API_URL = `${window.location.protocol}//${window.location.hostname}/api/v1`;
+            let currentVideos = [];
+            let currentIndex = 0;
+
+            async function loadSuggestedVideos() {
+                const response = await fetch(`${API_URL}/videos?sort=-views`);
+                const data = await response.json();
+                displayVideos(data.data);
+                clearChannelList();
+                clearPlaylistList();
+            }
+
+            function clearVideoList() {
+                document.getElementById('video-list').innerHTML = '';
+            }
+
+            async function loadChannels() {
+                const response = await fetch(`${API_URL}/video-channels`);
+                const data = await response.json();
+                displayChannels(data.data);
+                clearVideoList();
+                clearPlaylistList();
+            }
+
+            function clearChannelList() {
+                document.getElementById('channel-list').innerHTML = '';
+            }
+
+            async function loadChannelVideos(channel) {
+                let url = `${API_URL}/videos?channelId=${channel.name}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                currentVideos = data.data;
+                displayVideos(currentVideos);
+            }
+
+            async function loadPlaylists(channel) {
+                clearVideoList();
+                clearPlaylistList();
+
+                const response = await fetch(`${API_URL}/video-channels/${channel.name}/video-playlists`);
+                const data = await response.json();
+                displayPlaylists(data.data);
+
+                loadChannelVideos(channel);
+
+                clearChannelList();
+            }
+
+            function clearPlaylistList() {
+                document.getElementById('playlist-list').innerHTML = '';
+            }
+
+            function displayChannels(channels) {
+                const listEl = document.getElementById('channel-list');
+                listEl.innerHTML = '';
+                channels.forEach(channel => {
+                    let div = document.createElement('div');
+                    div.classList.add('list-item');
+                    div.innerHTML = `${channel.name}`;
+                    div.onclick = () => loadPlaylists(channel);
+                    listEl.appendChild(div);
+                });
+            }
+
+            async function loadPlaylistVideos(playlist) {
+                let url = `${API_URL}/video-playlists/${playlist.shortUUID}/videos`;
+                const response = await fetch(url);
+                const data = await response.json();
+                currentVideos = data.data;
+                displayVideos(currentVideos);
+            }
+
+            function displayPlaylists(playlists) {
+                const listEl = document.getElementById('playlist-list');
+                listEl.innerHTML = '';
+                playlists.forEach(playlist => {
+                    let div = document.createElement('div');
+                    div.classList.add('list-item');
+                    div.innerHTML = `${playlist.displayName}`;
+                    div.onclick = () => loadPlaylistVideos(playlist);
+                    listEl.appendChild(div);
+                });
+            }
+
+            function displayVideos(videos) {
+                const listEl = document.getElementById('video-list');
+                listEl.innerHTML = '';
+                videos.forEach(video => {
+                    let div = document.createElement('div');
+                    div.classList.add('video-item');
+                    let thumbnailUrl = video.thumbnailPath.startsWith('http') ? video.thumbnailPath : `${BASE_URL}${video.thumbnailPath}`;
+                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><br>${video.name}`;
+                    div.onclick = () => playVideo(video);
+                    listEl.appendChild(div);
+                });
+            }
+
+            function playVideo(video) {
+                currentIndex = currentVideos.findIndex(v => v.id === video.id);
+                const playerContainer = document.getElementById('player-container');
+                const player = document.getElementById('player');
+                player.src = `blob:${BASE_URL}/${video.uuid}`;
+                player.play();
+                playerContainer.style.display = 'flex';
+            }
+
+            document.getElementById('player').addEventListener('click', function() {
+                this.paused ? this.play() : this.pause();
+            });
+
+            function showCookies() {
+                document.getElementById('cookie-info').textContent = document.cookie || "No cookies received.";
+            }
+            showCookies();
+
+            // Load suggested videos by default
+            loadSuggestedVideos();
+
+            // Expose functions to global scope
+            window.loadChannels = loadChannels;
+            window.loadSuggestedVideos = loadSuggestedVideos;
+        });
     </script>
+    <style>
+        body { display: flex; flex-direction: column; margin: 0; font-family: Arial, sans-serif; background: #f0f0f0; }
+        #content-wrapper { display: flex; flex-grow: 1; }
+        #sidebar { width: 250px; background: #2c3e50; color: white; padding: 10px; overflow-y: auto; }
+        #sidebar button { width: 100%; padding: 10px; margin-bottom: 5px; border: none; background: #3498db; color: white; cursor: pointer; }
+        #sidebar button:hover { background: #2980b9; }
+        #main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 10px; }
+        #channel-list, #playlist-list, #video-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .list-item, .video-item { width: 200px; cursor: pointer; text-align: center; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .video-item img { width: 100%; border-radius: 5px; }
+        .video-item:hover, .list-item:hover { background: #ecf0f1; }
+        #player-container { display: none; align-items: center; justify-content: center; }
+        video { width: 90%; height: 80vh; background: black; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.5); }
+        #cookie-info { background: #ddd; padding: 10px; font-size: 12px; border-top: 1px solid #bbb; overflow-wrap: break-word; }
+    </style>
 </head>
 <body>
-    <div id="sidebar">
-        <button onclick="loadChannels()">Channels</button>
-        <button onclick="loadSuggestedVideos()">Suggested Videos</button>
-    </div>
-    <div id="main-content">
-        <div id="video-list"></div>
-        <div id="player-container">
-            <video id="player" controls></video>
+    <div id="content-wrapper">
+        <div id="sidebar">
+            <button onclick="loadChannels()">Channels</button>
+            <button onclick="loadSuggestedVideos()">Suggested Videos</button>
+        </div>
+        <div id="main-content">
+            <div id="channel-list"></div>
+            <div id="playlist-list"></div>
+            <div id="video-list"></div>
+            <div id="player-container">
+                <video id="player" controls></video>
+            </div>
+            <div>
+                <video playsinline="playsinline" poster="" src="http://192.168.50.101/d4576fa4-bd6c-44f4-a2d3-b2f3a29fc8ec"></video>
+            </div>
         </div>
     </div>
-    <script>
-        //const API_URL = `${window.location.origin}/api/v1`;
-        const API_URL = `http://192.168.50.101/api/v1`;
-        let currentVideos = [];
-        let currentIndex = 0;
-
-        async function loadChannels() {
-            const response = await fetch(`${API_URL}/video-channels`);
-            const data = await response.json();
-            displayList(data.data, 'channel');
-        }
-
-        async function loadSuggestedVideos() {
-            const response = await fetch(`${API_URL}/videos`);
-            const data = await response.json();
-            displayList(data.data, 'video');
-        }
-
-        async function loadPlaylists(channelId) {
-            const response = await fetch(`${API_URL}/video-playlists?channelId=${channelId}`);
-            const data = await response.json();
-            displayList(data.data, 'playlist');
-        }
-
-        async function loadVideos(type, id) {
-            let url = type === 'playlist' ? `${API_URL}/video-playlists/${id}/videos` : `${API_URL}/videos?channelId=${id}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            currentVideos = data.data;
-            displayList(currentVideos, 'video');
-        }
-
-        function displayList(items, type) {
-            const listEl = document.getElementById('video-list');
-            listEl.innerHTML = '';
-            items.forEach(item => {
-                let div = document.createElement('div');
-                div.classList.add('video-item');
-                div.innerHTML = `<img src="${API_URL}${item.thumbnailPath}" alt="Thumbnail"><br>${item.name}`;
-                div.onclick = () => {
-                    if (type === 'channel') loadPlaylists(item.id);
-                    else if (type === 'playlist' || type === 'channel-videos') loadVideos(type, item.id);
-                    else playVideo(item);
-                };
-                listEl.appendChild(div);
-            });
-        }
-
-        function playVideo(video) {
-            currentIndex = currentVideos.findIndex(v => v.id === video.id);
-            const playerContainer = document.getElementById('player-container');
-            const player = document.getElementById('player');
-            player.src = video.files[0].fileUrl;
-            player.play();
-            playerContainer.style.display = 'flex';
-        }
-
-        document.getElementById('player').addEventListener('click', function() {
-            this.paused ? this.play() : this.pause();
-        });
-
-        function nextVideo() {
-            if (currentIndex < currentVideos.length - 1) playVideo(currentVideos[++currentIndex]);
-        }
-
-        function prevVideo() {
-            if (currentIndex > 0) playVideo(currentVideos[--currentIndex]);
-        }
-    </script>
+    <div id="cookie-info"></div>
 </body>
 </html>
