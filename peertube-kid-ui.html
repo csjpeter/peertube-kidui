@@ -10,10 +10,12 @@
             #sidebar { width: 250px; background: #2c3e50; color: white; padding: 10px; overflow-y: auto; }
             #sidebar button { width: 100%; padding: 10px; margin-bottom: 5px; border: none; background: #3498db; color: white; cursor: pointer; }
             #sidebar button:hover { background: #2980b9; }
-            #list { list-style: none; padding: 0; }
-            #list li { cursor: pointer; padding: 10px; border-bottom: 1px solid #ccc; background: white; color: black; }
-            #list li:hover { background: #ecf0f1; }
-            #content { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            #main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 10px; }
+            #video-list { display: flex; flex-wrap: wrap; gap: 10px; }
+            .video-item { width: 200px; cursor: pointer; text-align: center; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .video-item img { width: 100%; border-radius: 5px; }
+            .video-item:hover { background: #ecf0f1; }
+            #player-container { display: none; align-items: center; justify-content: center; }
             video { width: 90%; height: 80vh; background: black; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.5); }
         `;
         const styleSheet = document.createElement("style");
@@ -26,10 +28,12 @@
     <div id="sidebar">
         <button onclick="loadChannels()">Channels</button>
         <button onclick="loadSuggestedVideos()">Suggested Videos</button>
-        <ul id="list"></ul>
     </div>
-    <div id="content">
-        <video id="player" controls></video>
+    <div id="main-content">
+        <div id="video-list"></div>
+        <div id="player-container">
+            <video id="player" controls></video>
+        </div>
     </div>
     <script>
         //const API_URL = `${window.location.origin}/api/v1`;
@@ -44,7 +48,7 @@
         }
 
         async function loadSuggestedVideos() {
-            const response = await fetch(`${API_URL}/videos/suggestions`);
+            const response = await fetch(`${API_URL}/videos`);
             const data = await response.json();
             displayList(data.data, 'video');
         }
@@ -64,33 +68,33 @@
         }
 
         function displayList(items, type) {
-            const listEl = document.getElementById('list');
+            const listEl = document.getElementById('video-list');
             listEl.innerHTML = '';
             items.forEach(item => {
-                let li = document.createElement('li');
-                li.textContent = item.name;
-                li.onclick = () => {
+                let div = document.createElement('div');
+                div.classList.add('video-item');
+                div.innerHTML = `<img src="${API_URL}${item.thumbnailPath}" alt="Thumbnail"><br>${item.name}`;
+                div.onclick = () => {
                     if (type === 'channel') loadPlaylists(item.id);
                     else if (type === 'playlist' || type === 'channel-videos') loadVideos(type, item.id);
                     else playVideo(item);
                 };
-                listEl.appendChild(li);
+                listEl.appendChild(div);
             });
         }
 
         function playVideo(video) {
             currentIndex = currentVideos.findIndex(v => v.id === video.id);
+            const playerContainer = document.getElementById('player-container');
             const player = document.getElementById('player');
             player.src = video.files[0].fileUrl;
             player.play();
+            playerContainer.style.display = 'flex';
         }
 
         document.getElementById('player').addEventListener('click', function() {
             this.paused ? this.play() : this.pause();
         });
-
-        document.getElementById('player').addEventListener('swipeleft', nextVideo);
-        document.getElementById('player').addEventListener('swiperight', prevVideo);
 
         function nextVideo() {
             if (currentIndex < currentVideos.length - 1) playVideo(currentVideos[++currentIndex]);
@@ -102,4 +106,3 @@
     </script>
 </body>
 </html>
-
