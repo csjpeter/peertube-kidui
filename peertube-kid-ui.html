@@ -63,15 +63,17 @@
 
             function clearChannelList() {
                 document.getElementById('channel-list').innerHTML = '';
+                document.getElementById('current-channel').innerHTML = '';
             }
 
             function displayChannels(channels) {
                 clearChannelList();
+
                 const listEl = document.getElementById('channel-list');
                 channels.forEach(channel => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
-                    div.innerHTML = `${channel.name}`;
+                    div.innerHTML = `${channel.displayName}`;
                     //div.onclick = () => loadPlaylists(channel);
                     div.onclick = () => loadChannelVideos(channel);
                     listEl.appendChild(div);
@@ -79,10 +81,14 @@
             }
 
             async function loadChannelVideos(channel) {
+                clearChannelList();
+
+                const currChEl = document.getElementById('current-channel');
+                currChEl.innerHTML = `<h1>${channel.displayName}</h1>`;
+
                 let url = `${API_URL}/video-channels/${channel.name}/videos`;
                 const response = await fetch(url);
                 const data = await response.json();
-                clearChannelList();
                 displayVideos(data.data);
                 loadPlaylists(channel);
             }
@@ -97,6 +103,7 @@
 
             function displayPlaylists(playlists) {
                 clearPlaylistList();
+
                 const listEl = document.getElementById('playlist-list');
                 playlists.forEach(playlist => {
                     let div = document.createElement('div');
@@ -109,9 +116,15 @@
 
             function clearPlaylistList() {
                 document.getElementById('playlist-list').innerHTML = '';
+                document.getElementById('current-playlist').innerHTML = '';
             }
 
             async function loadPlaylistVideos(playlist) {
+                clearPlaylistList();
+
+                const currPlEl = document.getElementById('current-playlist');
+                currPlEl.innerHTML = `<h2>${playlist.displayName}</h2>`;
+
                 let url = `${API_URL}/video-playlists/${playlist.id}/videos`;
                 const response = await fetch(url);
                 const data = await response.json();
@@ -134,6 +147,16 @@
             // play video
 
             function playVideo(video) {
+                clearVideoList();
+                clearPlaylistList();
+                clearChannelList();
+
+                const currViEl = document.getElementById('current-playlist');
+                currViEl.innerHTML = `<h1>${video.name}</h1>`;
+
+                const currDescEl = document.getElementById('video-description');
+                currDescEl.innerHTML = `<p>${video.description}</p>`;
+
                 currentIndex = currentVideos.findIndex(v => v.id === video.id);
                 const playerContainer = document.getElementById('player-container');
                 const player = document.getElementById('player');
@@ -184,15 +207,20 @@
             <button onclick="loadSuggestedVideos()">Suggested Videos</button>
         </div>
         <div id="main-content">
+            <div id="current-channel"></div>
             <div id="channel-list"></div>
+
+            <div id="current-playlist"></div>
             <div id="playlist-list"></div>
+
             <div id="video-list"></div>
+
+            <div id="current-video"></div>
             <div id="player-container">
                 <video id="player" controls></video>
             </div>
-            <div>
-                <video playsinline="playsinline" poster="" src="http://192.168.50.101/d4576fa4-bd6c-44f4-a2d3-b2f3a29fc8ec"></video>
-            </div>
+            <div id="video-description"></div>
+
         </div>
     </div>
     <div id="cookie-info"></div>
