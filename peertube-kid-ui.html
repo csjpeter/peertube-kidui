@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kid-Friendly PeerTube</title>
+    <script>
+        const styles = `
+            body { display: flex; margin: 0; font-family: Arial, sans-serif; background: #f0f0f0; }
+            #sidebar { width: 250px; background: #2c3e50; color: white; padding: 10px; overflow-y: auto; }
+            #sidebar button { width: 100%; padding: 10px; margin-bottom: 5px; border: none; background: #3498db; color: white; cursor: pointer; }
+            #sidebar button:hover { background: #2980b9; }
+            #list { list-style: none; padding: 0; }
+            #list li { cursor: pointer; padding: 10px; border-bottom: 1px solid #ccc; background: white; color: black; }
+            #list li:hover { background: #ecf0f1; }
+            #content { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            video { width: 90%; height: 80vh; background: black; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.5); }
+        `;
+        const styleSheet = document.createElement("style");
+        styleSheet.type = "text/css";
+        styleSheet.innerText = styles;
+        document.head.appendChild(styleSheet);
+    </script>
+</head>
+<body>
+    <div id="sidebar">
+        <button onclick="loadChannels()">Channels</button>
+        <button onclick="loadSuggestedVideos()">Suggested Videos</button>
+        <ul id="list"></ul>
+    </div>
+    <div id="content">
+        <video id="player" controls></video>
+    </div>
+    <script>
+        //const API_URL = `${window.location.origin}/api/v1`;
+        const API_URL = `http://192.168.50.101/api/v1`;
+        let currentVideos = [];
+        let currentIndex = 0;
+
+        async function loadChannels() {
+            const response = await fetch(`${API_URL}/video-channels`);
+            const data = await response.json();
+            displayList(data.data, 'channel');
+        }
+
+        async function loadSuggestedVideos() {
+            const response = await fetch(`${API_URL}/videos/suggestions`);
+            const data = await response.json();
+            displayList(data.data, 'video');
+        }
+
+        async function loadPlaylists(channelId) {
+            const response = await fetch(`${API_URL}/video-playlists?channelId=${channelId}`);
+            const data = await response.json();
+            displayList(data.data, 'playlist');
+        }
+
+        async function loadVideos(type, id) {
+            let url = type === 'playlist' ? `${API_URL}/video-playlists/${id}/videos` : `${API_URL}/videos?channelId=${id}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            currentVideos = data.data;
+            displayList(currentVideos, 'video');
+        }
+
+        function displayList(items, type) {
+            const listEl = document.getElementById('list');
+            listEl.innerHTML = '';
+            items.forEach(item => {
+                let li = document.createElement('li');
+                li.textContent = item.name;
+                li.onclick = () => {
+                    if (type === 'channel') loadPlaylists(item.id);
+                    else if (type === 'playlist' || type === 'channel-videos') loadVideos(type, item.id);
+                    else playVideo(item);
+                };
+                listEl.appendChild(li);
+            });
+        }
+
+        function playVideo(video) {
+            currentIndex = currentVideos.findIndex(v => v.id === video.id);
+            const player = document.getElementById('player');
+            player.src = video.files[0].fileUrl;
+            player.play();
+        }
+
+        document.getElementById('player').addEventListener('click', function() {
+            this.paused ? this.play() : this.pause();
+        });
+
+        document.getElementById('player').addEventListener('swipeleft', nextVideo);
+        document.getElementById('player').addEventListener('swiperight', prevVideo);
+
+        function nextVideo() {
+            if (currentIndex < currentVideos.length - 1) playVideo(currentVideos[++currentIndex]);
+        }
+
+        function prevVideo() {
+            if (currentIndex > 0) playVideo(currentVideos[--currentIndex]);
+        }
+    </script>
+</body>
+</html>
+
