@@ -24,6 +24,8 @@
             let currentVideos = [];
             let currentIndex = 0;
 
+            // suggested
+
             async function loadSuggestedVideos() {
                 const response = await fetch(`${API_URL}/videos?sort=-views`);
                 const data = await response.json();
@@ -35,6 +37,21 @@
             function clearVideoList() {
                 document.getElementById('video-list').innerHTML = '';
             }
+
+            function displayVideos(videos) {
+                clearVideoList();
+                const listEl = document.getElementById('video-list');
+                videos.forEach(video => {
+                    let div = document.createElement('div');
+                    div.classList.add('video-item');
+                    let thumbnailUrl = `${BASE_URL}${video.thumbnailPath}`;
+                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><br>${video.name}`;
+                    div.onclick = () => playVideo(video);
+                    listEl.appendChild(div);
+                });
+            }
+
+            // channels
 
             async function loadChannels() {
                 const response = await fetch(`${API_URL}/video-channels`);
@@ -48,54 +65,39 @@
                 document.getElementById('channel-list').innerHTML = '';
             }
 
-            async function loadChannelVideos(channel) {
-                let url = `${API_URL}/videos?channelId=${channel.name}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                currentVideos = data.data;
-                displayVideos(currentVideos);
-            }
-
-            async function loadPlaylists(channel) {
-                clearVideoList();
-                clearPlaylistList();
-
-                const response = await fetch(`${API_URL}/video-channels/${channel.name}/video-playlists`);
-                const data = await response.json();
-                displayPlaylists(data.data);
-
-                loadChannelVideos(channel);
-
-                clearChannelList();
-            }
-
-            function clearPlaylistList() {
-                document.getElementById('playlist-list').innerHTML = '';
-            }
-
             function displayChannels(channels) {
+                clearChannelList();
                 const listEl = document.getElementById('channel-list');
-                listEl.innerHTML = '';
                 channels.forEach(channel => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
                     div.innerHTML = `${channel.name}`;
-                    div.onclick = () => loadPlaylists(channel);
+                    //div.onclick = () => loadPlaylists(channel);
+                    div.onclick = () => loadChannelVideos(channel);
                     listEl.appendChild(div);
                 });
             }
 
-            async function loadPlaylistVideos(playlist) {
-                let url = `${API_URL}/video-playlists/${playlist.shortUUID}/videos`;
+            async function loadChannelVideos(channel) {
+                let url = `${API_URL}/video-channels/${channel.name}/videos`;
                 const response = await fetch(url);
                 const data = await response.json();
-                currentVideos = data.data;
-                displayVideos(currentVideos);
+                clearChannelList();
+                displayVideos(data.data);
+                loadPlaylists(channel);
+            }
+
+            // playlists
+
+            async function loadPlaylists(channel) {
+                const response = await fetch(`${API_URL}/video-channels/${channel.name}/video-playlists`);
+                const data = await response.json();
+                displayPlaylists(data.data);
             }
 
             function displayPlaylists(playlists) {
+                clearPlaylistList();
                 const listEl = document.getElementById('playlist-list');
-                listEl.innerHTML = '';
                 playlists.forEach(playlist => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
@@ -105,18 +107,31 @@
                 });
             }
 
-            function displayVideos(videos) {
+            function clearPlaylistList() {
+                document.getElementById('playlist-list').innerHTML = '';
+            }
+
+            async function loadPlaylistVideos(playlist) {
+                let url = `${API_URL}/video-playlists/${playlist.id}/videos`;
+                const response = await fetch(url);
+                const data = await response.json();
+                displayPlaylistVideos(data.data);
+            }
+
+            function displayPlaylistVideos(videos) {
+                clearVideoList();
                 const listEl = document.getElementById('video-list');
-                listEl.innerHTML = '';
-                videos.forEach(video => {
+                videos.forEach(obj => {
                     let div = document.createElement('div');
                     div.classList.add('video-item');
-                    let thumbnailUrl = video.thumbnailPath.startsWith('http') ? video.thumbnailPath : `${BASE_URL}${video.thumbnailPath}`;
-                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><br>${video.name}`;
-                    div.onclick = () => playVideo(video);
+                    let thumbnailUrl = `${BASE_URL}${obj.video.thumbnailPath}`;
+                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><br>${obj.video.name}`;
+                    div.onclick = () => playVideo(obj.video);
                     listEl.appendChild(div);
                 });
             }
+
+            // play video
 
             function playVideo(video) {
                 currentIndex = currentVideos.findIndex(v => v.id === video.id);
@@ -130,6 +145,8 @@
             document.getElementById('player').addEventListener('click', function() {
                 this.paused ? this.play() : this.pause();
             });
+
+            // debugging content
 
             function showCookies() {
                 document.getElementById('cookie-info').textContent = document.cookie || "No cookies received.";
