@@ -17,6 +17,106 @@
       style-src-elem  'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
     ">
     <title>Kid-Friendly PeerTube</title>
+        <style>
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            margin: 0; 
+            font-family: Arial, sans-serif; 
+            background: #f0f0f0; 
+        }
+
+        #topbar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: #3498db;
+            padding: 10px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background: #2ecc71;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #27ae60;
+        }
+
+        #channel-list, #playlist-list, #video-list { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .list-item, .video-item { 
+            width: 220px; 
+            cursor: pointer; 
+            text-align: center; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .video-item img { 
+            width: 100%; 
+            border-radius: 5px; 
+        }
+
+        .video-item:hover, .list-item:hover { 
+            background: #ecf0f1; 
+            transform: scale(1.05);
+        }
+
+        #embed-container { 
+            display: none; 
+            align-items: center; 
+            justify-content: center;
+            position: relative;
+        }
+
+        #embed-player { 
+            width: 90%; 
+            height: 80vh; 
+            background: black; 
+            border-radius: 10px; 
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+        }
+
+        .fullscreen-controls {
+            display: none;
+            position: fixed;
+            top: 20px;
+            width: 100%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .fullscreen-controls button {
+            pointer-events: auto;
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            font-size: 20px;
+        }
+
+        .fullscreen-controls .prev {
+            left: 20px;
+        }
+        .fullscreen-controls .next {
+            right: 20px;
+        }
+    </style>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
@@ -27,8 +127,11 @@
             function clearPage() {
                 document.getElementById('page-title').innerHTML = '';
                 document.getElementById('video-list').innerHTML = '';
+                document.getElementById('video-list').style.display = 'none';
                 document.getElementById('channel-list').innerHTML = '';
+                document.getElementById('channel-list').style.display = 'none';
                 document.getElementById('playlist-list').innerHTML = '';
+                document.getElementById('playlist-list').style.display = 'none';
 
                 const embedEl = document.getElementById('embed-player');
                 embedEl.src = "";
@@ -42,6 +145,7 @@
                 currentIndex = 0;
 
                 const listEl = document.getElementById('video-list');
+                listEl.style.display = 'flex';
                 videos.forEach(video => {
                     let vid = video.video ?? video;
 
@@ -88,6 +192,7 @@
                 currChEl.innerHTML = `<h1>Csatornák</h1>`;
 
                 const listEl = document.getElementById('channel-list');
+                listEl.style.display = 'flex';
                 channels.forEach(channel => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
@@ -121,6 +226,7 @@
                 let playlists = data.data;
 
                 const listEl = document.getElementById('playlist-list');
+                listEl.style.display = 'flex';
                 playlists.forEach(playlist => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
@@ -203,17 +309,6 @@
             loadSuggestedVideos();
         });
     </script>
-    <style>
-        body { display: flex; flex-direction: column; margin: 0; font-family: Arial, sans-serif; background: #f0f0f0; }
-        #channel-list, #playlist-list, #video-list { display: flex; flex-wrap: wrap; gap: 10px; }
-        .list-item, .video-item { width: 200px; cursor: pointer; text-align: center; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .video-item img { width: 100%; border-radius: 5px; }
-        .video-item:hover, .list-item:hover { background: #ecf0f1; }
-        #player-container { display: none; align-items: center; justify-content: center; }
-        video { width: 90%; height: 80vh; background: black; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.5); }
-        #embed-container { display: none; align-items: center; justify-content: center; }
-        #embed-player { width: 90%; height: 80vh; background: black; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.5); }
-    </style>
 </head>
 <body>
     <div id="content-wrapper">
@@ -231,7 +326,11 @@
             <div id="video-list"></div>
 
             <div id="embed-container">
-                <iframe id="embed-player"></iframe>
+                <iframe id="embed-player" allowfullscreen></iframe>
+                <div class="fullscreen-controls" id="fullscreen-controls">
+                    <button class="prev" onclick="prevVideo()">&lt;---</button>
+                    <button class="next" onclick="nextVideo()">---&gt;</button>
+                </div>
             </div>
             <!--
             <div id="player-container">
@@ -242,5 +341,15 @@
 
         </div>
     </div>
+    <script>
+        document.getElementById('embed-player').addEventListener('fullscreenchange', function() {
+            const controls = document.getElementById('fullscreen-controls');
+            if (document.fullscreenElement) {
+                controls.style.display = 'block';
+            } else {
+                controls.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
