@@ -17,104 +17,69 @@
       style-src-elem  'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
     ">
     <title>Kid-Friendly PeerTube</title>
-        <style>
-        body { 
-            display: flex; 
-            flex-direction: column; 
-            margin: 0; 
-            font-family: Arial, sans-serif; 
-            background: #f0f0f0; 
-        }
-
-        #topbar {
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            background: #3498db;
+        }
+
+        #content-wrapper {
+            display: flex;
+            flex: 1; /* Allow content-wrapper to grow and fill available space */
+        }
+
+        #left-bar, #right-bar {
+            width: 150px; /* Adjust width as needed */
+            background-color: #f0f0f0;
             padding: 10px;
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center buttons horizontally */
+            justify-content: center; /* Center buttons vertically */
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            background: #2ecc71;
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #27ae60;
-        }
-
-        #channel-list, #playlist-list, #video-list { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            justify-content: center;
+        #main-content {
+            flex: 1; /* Allow main-content to grow and fill remaining space */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+            justify-content: flex-start; /* Align content to the top */
             padding: 20px;
         }
 
-        .list-item, .video-item { 
-            width: 220px; 
-            cursor: pointer; 
-            text-align: center; 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-
-        .video-item img { 
-            width: 100%; 
-            border-radius: 5px; 
-        }
-
-        .video-item:hover, .list-item:hover { 
-            background: #ecf0f1; 
-            transform: scale(1.05);
-        }
-
-        #embed-container { 
-            display: none; 
-            align-items: center; 
-            justify-content: center;
-            position: relative;
-        }
-
-        #embed-player { 
-            width: 90%; 
-            height: 80vh; 
-            background: black; 
-            border-radius: 10px; 
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-        }
-
-        .fullscreen-controls {
+        #content-list {
             display: none;
-            position: fixed;
-            top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .video-item, .list-item {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        #embed-container {
+            width: 80%; /* Adjust as needed */
+            max-width: 800px; /* Maximum width */
+            margin: 20px 0;
+            display: none;
+        }
+
+        #embed-player {
             width: 100%;
-            z-index: 1000;
-            pointer-events: none;
+            height: 450px; /* Adjust height as needed */
+            display: none;
         }
 
-        .fullscreen-controls button {
-            pointer-events: auto;
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            font-size: 20px;
-        }
-
-        .fullscreen-controls .prev {
-            left: 20px;
-        }
-        .fullscreen-controls .next {
-            right: 20px;
+        #video-description {
+            width: 80%;
+            max-width: 800px;
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
     <script>
@@ -126,12 +91,8 @@
 
             function clearPage() {
                 document.getElementById('page-title').innerHTML = '';
-                document.getElementById('video-list').innerHTML = '';
-                document.getElementById('video-list').style.display = 'none';
-                document.getElementById('channel-list').innerHTML = '';
-                document.getElementById('channel-list').style.display = 'none';
-                document.getElementById('playlist-list').innerHTML = '';
-                document.getElementById('playlist-list').style.display = 'none';
+                document.getElementById('content-list').innerHTML = '';
+                document.getElementById('content-list').style.display = 'none';
 
                 const embedEl = document.getElementById('embed-player');
                 embedEl.src = "";
@@ -144,7 +105,7 @@
                 currentVideos = videos;
                 currentIndex = 0;
 
-                const listEl = document.getElementById('video-list');
+                const listEl = document.getElementById('content-list');
                 listEl.style.display = 'flex';
                 videos.forEach(video => {
                     let vid = video.video ?? video;
@@ -174,6 +135,7 @@
 
                 const currChEl = document.getElementById('page-title');
                 currChEl.innerHTML = `<h1>Ajánlatok</h1>`;
+                currChEl.style.display = 'block';
 
                 showVideoList(data.data);
             }
@@ -190,8 +152,9 @@
 
                 const currChEl = document.getElementById('page-title');
                 currChEl.innerHTML = `<h1>Csatornák</h1>`;
+                currChEl.style.display = 'block';
 
-                const listEl = document.getElementById('channel-list');
+                const listEl = document.getElementById('content-list');
                 listEl.style.display = 'flex';
                 channels.forEach(channel => {
                     let div = document.createElement('div');
@@ -212,10 +175,11 @@
 
                 const currChEl = document.getElementById('page-title');
                 currChEl.innerHTML = `<h1>${channel.displayName}</h1>`;
-
-                showVideoList(data.data);
+                currChEl.style.display = 'block';
 
                 loadPlaylists(channel);
+
+                showVideoList(data.data);
             }
 
             // playlists
@@ -225,14 +189,15 @@
                 const data = await response.json();
                 let playlists = data.data;
 
-                const listEl = document.getElementById('playlist-list');
+                const listEl = document.getElementById('content-list');
                 listEl.style.display = 'flex';
                 playlists.forEach(playlist => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
-                    div.innerHTML = `${playlist.displayName}`;
+                    div.innerHTML = `${playlist.displayName}<br/>`;
                     div.onclick = () => loadPlaylistVideos(playlist);
-                    listEl.appendChild(div);
+                    //listEl.appendChild(div);
+                    listEl.prepend(div);
                 });
             }
 
@@ -245,6 +210,7 @@
 
                 const currPlEl = document.getElementById('page-title');
                 currPlEl.innerHTML = `<h1>${playlist.displayName}</h1>`;
+                currPlEl.style.display = 'block';
 
                 showVideoList(data.data);
             }
@@ -279,7 +245,8 @@
                 currentIndex = currentVideos.findIndex(v => v.id === video.id);
 
                 const currViEl = document.getElementById('page-title');
-                currViEl.innerHTML = `<h1>${video.name}</h1>`;
+                currViEl.innerHTML = `<h4>${video.name}</h4>`;
+                currViEl.style.display = 'none';
 
                 const currDescEl = document.getElementById('video-description');
                 if (video.description != null)
@@ -290,7 +257,8 @@
                 const playerContainer = document.getElementById('embed-container');
                     playerContainer.style.display = 'flex';
                 const embedEl = document.getElementById('embed-player');
-                embedEl.src = video.embedPath;
+                let path = video.embedPath+"?autoplay=true"
+                embedEl.src = path;
                 embedEl.style.display = 'block';
 
                 //console.log(video);
@@ -312,25 +280,17 @@
 </head>
 <body>
     <div id="content-wrapper">
-        <div id="topbar">
-            <button onclick="prevVideo()">&lt;---</button>
+        <div id="left-bar">
             <button onclick="loadSuggestedVideos()">Ajánlatok</button>
-            <button onclick="loadChannels()">Csatornák</button>
-            <button onclick="nextVideo()">---&gt;</button>
+            <button onclick="prevVideo()">&#8592;</button>
         </div>
         <div id="main-content">
             <div id="page-title"></div>
 
-            <div id="channel-list"></div>
-            <div id="playlist-list"></div>
-            <div id="video-list"></div>
+            <div id="content-list"></div>
 
             <div id="embed-container">
                 <iframe id="embed-player" allowfullscreen></iframe>
-                <div class="fullscreen-controls" id="fullscreen-controls">
-                    <button class="prev" onclick="prevVideo()">&lt;---</button>
-                    <button class="next" onclick="nextVideo()">---&gt;</button>
-                </div>
             </div>
             <!--
             <div id="player-container">
@@ -340,16 +300,10 @@
             <div id="video-description"></div>
 
         </div>
+        <div id="right-bar">
+            <button onclick="loadChannels()">Csatornák</button>
+            <button onclick="nextVideo()">&#8594;</button>
+        </div>
     </div>
-    <script>
-        document.getElementById('embed-player').addEventListener('fullscreenchange', function() {
-            const controls = document.getElementById('fullscreen-controls');
-            if (document.fullscreenElement) {
-                controls.style.display = 'block';
-            } else {
-                controls.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 </html>
