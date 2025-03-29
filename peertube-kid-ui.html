@@ -258,6 +258,45 @@
         }
     </style>
     <script>
+        // Function to toggle full-screen mode
+        function toggleFullScreen() {
+            if (!document.fullscreenElement &&    // If not in full-screen mode
+             !document.webkitFullscreenElement && // For Safari
+             !document.mozFullScreenElement && // For Firefox
+             !document.msFullscreenElement) {  // For IE/Edge
+                // Request full-screen on the document
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) {
+                    document.documentElement.mozRequestFullScreen(); // Firefox
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen(); // Safari
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen(); // IE/Edge
+                }
+            } else {
+                // Exit full-screen mode
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen(); // Firefox
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen(); // Safari
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen(); // IE/Edge
+                }
+            }
+            if (document.fullscreenElement) {
+                // Update button text to show "Exit Full Screen"
+                document.getElementById('fullscreenButton').textContent = '&nbsp;X&nbsp;';
+            } else {
+                // Update button text to show "Go Full Screen"
+                document.getElementById('fullscreenButton').textContent = '[&nbsp;&nbsp;]';
+            }
+        }
+    </script>
+
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
             const API_URL = `${window.location.protocol}//${window.location.hostname}/api/v1`;
@@ -444,6 +483,7 @@
 <body>
     <div id="content-wrapper">
         <div id="top-bar">
+            <button onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
             <button onclick="prevVideo()">Előző</button>
             <button onclick="loadSuggestedVideos()">Ajánl.</button>
             <button onclick="loadChannels()">Csat.</button>
@@ -462,9 +502,10 @@
                 <div id="video-description"></div>
             </div>
             <div id="right-bar">
-                <button onclick="prevVideo()">Előző</button>
+                <button onclick="toggleFullScreen()"</button>
                 <button onclick="loadSuggestedVideos()">Ajánl.</button>
                 <button onclick="loadChannels()">Csat.</button>
+                <button onclick="prevVideo()">Előző</button>
                 <button onclick="nextVideo()">Köv.</button>
             </div>
         </div>
