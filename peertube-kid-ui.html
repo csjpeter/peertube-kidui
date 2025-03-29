@@ -25,15 +25,17 @@
             color: #333;
             width: 100%;
             height: 100%;
-            //transition: transform 0.5s ease; /* Added transition for smooth rotation */
-            //transform-origin: center center; /* Set the origin for rotation */
+        }
+
+        @media (pointer: coarse) {
+            html {
+                font-size: 12mm;
+            }
         }
 
         body {
             margin: 0;
             display: flex;
-            //width: 100%;
-            //height: 100%;
             transition: transform 0.5s ease; /* Added transition for smooth rotation */
             transform-origin: top left; /* Set the origin for rotation */
         }
@@ -41,55 +43,48 @@
         #content-wrapper {
             display: flex;
             flex: 1;
-            //transition: transform 0.5s ease; /* Added transition for smooth rotation */
-            //transform-origin: center center; /* Set the origin for rotation */
+            width: 100vw;
         }
 
         #left-bar, #right-bar {
-            width: 60px;
+            width: 6ex;
             background-color: #e0e0e0;
-            padding: 20px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
             box-sizing: border-box;
+            padding: 0px;
+            padding-top:7ex;
+            padding-bottom:7ex;
         }
 
         #left-bar button, #right-bar button {
+            height: 5ex;
             transform: rotate(-90deg);
             white-space: nowrap;
-            margin: 0;
-            padding: 8px 12px;
+            margin: 0px;
+            padding: 0px;
+            padding-left: 2ex;
+            padding-right: 2ex;
             border: 1px solid #ccc;
             background-color: #f0f0f0;
             color: #555;
             cursor: pointer;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 2ex;
             font-weight: 500;
             transition: background-color 0.3s ease;
         }
 
         #left-bar button:hover, #right-bar button:hover {
-            background-color: #d0d0d0;
+            background-color: #d0ddd0;
         }
 
-        #left-bar button:nth-child(2),
-        #right-bar button:nth-child(2) {
-            transform: none;
-            white-space: normal;
-            font-size: 18px;
-            padding: 10px 15px;
-            height: 10em;
-        }
-
-        #left-bar button:nth-child(2),
-        #right-bar button:nth-child(2) {
-            transform: none;
-            white-space: normal;
-            font-size: 18px;
-            padding: 10px 15px;
+        @media (pointer: coarse) {
+            #left-bar button:hover, #right-bar button:hover {
+                background-color: #f0f0f0;
+            }
         }
 
         #main-content {
@@ -98,17 +93,20 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding: 20px;
-            //overflow: auto;
-            //overflow-y: auto;
-            //overflow-x: auto;
+            padding: 0px;
             box-sizing: border-box;
         }
 
         #page-title h1, #page-title h4 {
             color: #444;
-            margin-bottom: 15px;
+            margin: 1ex;
             text-align: center;
+        }
+
+        @media (pointer: coarse) {
+            #page-title h1, #page-title h4 {
+                margin: 0.5ex;
+            }
         }
 
         #content-list {
@@ -117,17 +115,64 @@
             justify-content: center;
         }
 
-        .video-item, .list-item {
-            margin: 15px;
-            padding: 15px;
+        .video-item {
+            margin: 0.5ex;
+            padding: 0ex;
             border: 1px solid #ddd;
             text-align: center;
             cursor: pointer;
-            width: 220px;
+            width: 40ex;
             box-sizing: border-box;
             background-color: white;
-            border-radius: 8px;
+            border-radius: 1ex;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        .video-item img {
+            width: 100%;
+            padding: 0ex;
+            margin: 0ex;
+        }
+
+        .video-item p {
+            margin: 0ex;
+            padding-top: 0.5ex;
+            padding-bottom: 1ex;
+            padding-left: 1ex;
+            padding-right: 1ex;
+        }
+
+        .list-item {
+            margin: 0.5ex;
+            padding: 1ex;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            width: 40ex;
+            box-sizing: border-box;
+            background-color: white;
+            border-radius: 1ex;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        @media (pointer: coarse) and (orientation: portrait) {
+            .video-item {
+                width: 100%;
+            }
+            .list-item {
+                width: 100%;
+            }
+        }
+
+        @media (pointer: coarse) and (orientation: landscape) {
+            .video-item {
+                width: 40%;
+            }
+            .list-item {
+                width: 100%;
+            }
         }
 
         .video-item:hover, .list-item:hover {
@@ -139,33 +184,28 @@
             max-width: 100%;
             height: auto;
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 0ex;
+            padding: 0ex;
         }
 
         #embed-container {
-            width: 90%;
-            max-width: none;
-            margin: 20px 0;
+            width: 100%;
             display: none;
-            box-sizing: border-box;
+            //box-sizing: border-box;
         }
 
         #embed-player {
             width: 100%;
-            height: calc(100vh - 150px);
-            display: none;
+            height: 90vh;
             box-sizing: border-box;
             border: none;
         }
 
         #video-description {
-            width: 90%;
-            max-width: 1200px;
-            margin-top: 20px;
+            margin-top: 1ex;
             text-align: center;
             box-sizing: border-box;
             color: #666;
-            font-size: 15px;
         }
     </style>
     <script>
@@ -175,6 +215,13 @@
             let currentVideos = [];
             let currentIndex = 0;
             let isRotated = false;
+
+            function ellipseString(str, maxLength = 40) {
+                if (str.length <= maxLength) {
+                    return str;
+                }
+                return str.substring(0, maxLength - 3) + "...";
+            }
 
             function clearPage() {
                 document.getElementById('page-title').innerHTML = '';
@@ -205,7 +252,8 @@
                     let div = document.createElement('div');
                     div.classList.add('video-item');
                     let thumbnailUrl = `${BASE_URL}${vid.thumbnailPath}`;
-                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><br>${vid.name}`;
+                    let desc = ellipseString(vid.name);
+                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><p>${desc}</p>`;
                     div.onclick = () => playVideo(vid);
                     listEl.appendChild(div);
                 });
@@ -359,6 +407,8 @@
             function rotateContent() {
                 isRotated = !isRotated;
                 if (isRotated) {
+                    let width = window.innerWidth;
+                    let height = window.innerHeight;
                     document.body.style.transform = `translate(${window.innerWidth}px, 0) rotate(90deg)`;
                     document.body.style.height = '100vw';
                     document.body.style.width = '100vh';
@@ -378,7 +428,7 @@
     <div id="content-wrapper">
         <div id="left-bar">
             <button onclick="loadSuggestedVideos()">Ajánlatok</button>
-            <button onclick="prevVideo()">&#8592;</button>
+            <button onclick="prevVideo()">Előző</button>
             <button onclick="loadDiscoverVideos()">Felfedezés</button>
         </div>
         <div id="main-content">
@@ -387,7 +437,7 @@
             <div id="content-list"></div>
 
             <div id="embed-container">
-                <iframe id="embed-player" allowfullscreen></iframe>
+            <iframe id="embed-player" allowfullscreen></iframe>
             </div>
 
             <div id="video-description"></div>
@@ -395,7 +445,7 @@
         </div>
         <div id="right-bar">
             <button onclick="loadChannels()">Csatornák</button>
-            <button onclick="nextVideo()">&#8594;</button>
+            <button onclick="nextVideo()">Következő</button>
             <button onclick="rotateContent()">Rotate</button>
         </div>
     </div>
