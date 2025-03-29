@@ -18,8 +18,9 @@
     <title>Kid-Friendly PeerTube</title>
     <style>
         html {
-            margin: 0;
             display: flex;
+            flex: 1;
+            margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f4f4;
             color: #333;
@@ -28,34 +29,45 @@
         }
 
         body {
-            margin: 0;
             display: flex;
+            flex: 1;
+            margin: 0;
             transition: transform 0.5s ease; /* Added transition for smooth rotation */
             transform-origin: top left; /* Set the origin for rotation */
         }
 
         #content-wrapper {
             display: flex;
+            flex-direction: column;
             flex: 1;
             width: 100vw;
         }
 
-        #navigation-bar {
-            width: 6ex;
-            background-color: #e0e0e0;
+        #top-bar, #right-bar {
             display: flex;
-            flex-direction: column;
+            background-color: #e0e0e0;
             align-items: center;
             justify-content: space-between;
             box-sizing: border-box;
+            margin: 0ex;
             padding: 0px;
-            padding-top:3ex;
-            padding-bottom:3ex;
         }
 
-        #navigation-bar button {
+        #top-bar {
+            flex-direction: row;
+            padding-top: 1ex;
+            padding-bottom: 1ex;
+        }
+
+        #right-bar {
+            flex-direction: column;
+            height: 100vh;
+            padding-left: 1ex;
+            padding-right: 1ex;
+        }
+
+        #top-bar button, #right-bar button {
             height: 5ex;
-            transform: rotate(-90deg);
             white-space: nowrap;
             margin: 0px;
             padding: 0px;
@@ -71,22 +83,36 @@
             transition: background-color 0.3s ease;
         }
 
-        #navigation-bar button:hover {
+        #right-bar button {
+            transform: rotate(-90deg);
+        }
+
+        #top-bar button:hover {
             background-color: #d0ddd0;
         }
 
         @media (pointer: coarse) {
-            #navigation-bar button:hover {
+            #top-bar button:hover {
                 background-color: #f0f0f0;
             }
         }
 
         #main-content {
-            flex: 1;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex: 1;
+            flex-direction: row;
             justify-content: flex-start;
+            align-items: center;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        #sub-content {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
             padding: 0px;
             box-sizing: border-box;
         }
@@ -387,22 +413,30 @@
 </head>
 <body>
     <div id="content-wrapper">
-        <div id="navigation-bar">
+        <div id="top-bar">
             <button onclick="prevVideo()">Előző</button>
             <button onclick="loadSuggestedVideos()">Ajánl.</button>
             <button onclick="loadChannels()">Csat.</button>
             <button onclick="nextVideo()">Köv.</button>
         </div>
         <div id="main-content">
-            <div id="page-title"></div>
+            <div id="sub-content">
+                <div id="page-title"></div>
 
-            <div id="content-list"></div>
+                <div id="content-list"></div>
 
-            <div id="embed-container">
-            <iframe id="embed-player" allowfullscreen></iframe>
+                <div id="embed-container">
+                    <iframe id="embed-player" allowfullscreen></iframe>
+                </div>
+
+                <div id="video-description"></div>
             </div>
-
-            <div id="video-description"></div>
+            <div id="right-bar">
+                <button onclick="prevVideo()">Előző</button>
+                <button onclick="loadSuggestedVideos()">Ajánl.</button>
+                <button onclick="loadChannels()">Csat.</button>
+                <button onclick="nextVideo()">Köv.</button>
+            </div>
         </div>
     </div>
 </body>
