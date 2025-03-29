@@ -40,7 +40,7 @@
             width: 100vw;
         }
 
-        #left-bar, #right-bar {
+        #navigation-bar {
             width: 6ex;
             background-color: #e0e0e0;
             display: flex;
@@ -49,11 +49,11 @@
             justify-content: space-between;
             box-sizing: border-box;
             padding: 0px;
-            padding-top:7ex;
-            padding-bottom:7ex;
+            padding-top:3ex;
+            padding-bottom:3ex;
         }
 
-        #left-bar button, #right-bar button {
+        #navigation-bar button {
             height: 5ex;
             transform: rotate(-90deg);
             white-space: nowrap;
@@ -71,12 +71,12 @@
             transition: background-color 0.3s ease;
         }
 
-        #left-bar button:hover, #right-bar button:hover {
+        #navigation-bar button:hover {
             background-color: #d0ddd0;
         }
 
         @media (pointer: coarse) {
-            #left-bar button:hover, #right-bar button:hover {
+            #navigation-bar button:hover {
                 background-color: #f0f0f0;
             }
         }
@@ -387,9 +387,11 @@
 </head>
 <body>
     <div id="content-wrapper">
-        <div id="left-bar">
-            <button onclick="loadSuggestedVideos()">Ajánlatok</button>
+        <div id="navigation-bar">
             <button onclick="prevVideo()">Előző</button>
+            <button onclick="loadSuggestedVideos()">Ajánl.</button>
+            <button onclick="loadChannels()">Csat.</button>
+            <button onclick="nextVideo()">Köv.</button>
         </div>
         <div id="main-content">
             <div id="page-title"></div>
@@ -401,11 +403,6 @@
             </div>
 
             <div id="video-description"></div>
-
-        </div>
-        <div id="right-bar">
-            <button onclick="loadChannels()">Csatornák</button>
-            <button onclick="nextVideo()">Következő</button>
         </div>
     </div>
 </body>
