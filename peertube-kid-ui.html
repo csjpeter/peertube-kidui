@@ -17,7 +17,7 @@
     ">
     <title>Kid-Friendly PeerTube</title>
     <style>
-        body, html {
+           body, html {
             height: 100%;
             margin: 0;
             display: flex;
@@ -36,6 +36,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            box-sizing: border-box;
         }
 
         #main-content {
@@ -45,7 +46,8 @@
             align-items: center;
             justify-content: flex-start;
             padding: 20px;
-            overflow-y: auto; /* Enable vertical scrolling if content overflows */
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         #content-list {
@@ -60,7 +62,8 @@
             border: 1px solid #ccc;
             text-align: center;
             cursor: pointer;
-            width: 200px; /* Adjust thumbnail width */
+            width: 200px;
+            box-sizing: border-box;
         }
 
         .video-item img {
@@ -70,15 +73,16 @@
 
         #embed-container {
             width: 90%;
-            max-width: 1200px;
             margin: 20px 0;
             display: none;
+            box-sizing: border-box;
         }
 
         #embed-player {
             width: 100%;
-            height: 70vh; /* 70% of viewport height */
+            height: calc(100vh - 150px);
             display: none;
+            box-sizing: border-box;
         }
 
         #video-description {
@@ -86,6 +90,12 @@
             max-width: 1200px;
             margin-top: 20px;
             text-align: center;
+            box-sizing: border-box;
+        }
+
+        #embed-player {
+            width: 100%;
+            height: calc(100vh - 150px);
         }
     </style>
     <script>
