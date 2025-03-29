@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="
         default-src     'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
         media-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
@@ -24,12 +25,6 @@
             color: #333;
             width: 100%;
             height: 100%;
-        }
-
-        @media (pointer: coarse) {
-            html {
-                font-size: 12mm;
-            }
         }
 
         body {
@@ -170,7 +165,7 @@
                 width: 40%;
             }
             .list-item {
-                width: 100%;
+                width: 40%;
             }
         }
 
@@ -190,7 +185,6 @@
         #embed-container {
             width: 100%;
             display: none;
-            //box-sizing: border-box;
         }
 
         #embed-player {
@@ -213,7 +207,6 @@
             const API_URL = `${window.location.protocol}//${window.location.hostname}/api/v1`;
             let currentVideos = [];
             let currentIndex = 0;
-            let isRotated = false;
 
             function ellipseString(str, maxLength = 40) {
                 if (str.length <= maxLength) {
@@ -388,37 +381,6 @@
                 embedEl.style.display = 'block';
             }
 
-            // discover
-            async function loadDiscoverVideos() {
-                const response = await fetch(`${API_URL}/videos/discover`);
-                const data = await response.json();
-
-                clearPage();
-
-                const currChEl = document.getElementById('page-title');
-                currChEl.innerHTML = `<h1>Felfedezés</h1>`;
-                currChEl.style.display = 'block';
-
-                showVideoList(data.data);
-            }
-            window.loadDiscoverVideos = loadDiscoverVideos;
-
-            function rotateContent() {
-                isRotated = !isRotated;
-                if (isRotated) {
-                    let width = window.innerWidth;
-                    let height = window.innerHeight;
-                    document.body.style.transform = `translate(${window.innerWidth}px, 0) rotate(90deg)`;
-                    document.body.style.height = '100vw';
-                    document.body.style.width = '100vh';
-                } else {
-                    document.body.style.transform = 'rotate(0deg)';
-                    document.body.style.width = '100vw';
-                    document.body.style.height = '100vh';
-                }
-            }
-            window.rotateContent = rotateContent;
-
             loadSuggestedVideos();
         });
     </script>
@@ -428,7 +390,6 @@
         <div id="left-bar">
             <button onclick="loadSuggestedVideos()">Ajánlatok</button>
             <button onclick="prevVideo()">Előző</button>
-            <button onclick="loadDiscoverVideos()">Felfedezés</button>
         </div>
         <div id="main-content">
             <div id="page-title"></div>
@@ -445,7 +406,6 @@
         <div id="right-bar">
             <button onclick="loadChannels()">Csatornák</button>
             <button onclick="nextVideo()">Következő</button>
-            <button onclick="rotateContent()">Rotate</button>
         </div>
     </div>
 </body>
