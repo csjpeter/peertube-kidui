@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
     <meta http-equiv="Content-Security-Policy" content="
         default-src     'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
         media-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
@@ -17,22 +17,32 @@
     ">
     <title>Kid-Friendly PeerTube</title>
     <style>
-        body, html {
-            height: 100%;
+        html {
             margin: 0;
             display: flex;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f4f4;
             color: #333;
             width: 100%;
+            height: 100%;
+            //transition: transform 0.5s ease; /* Added transition for smooth rotation */
+            //transform-origin: center center; /* Set the origin for rotation */
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            //width: 100%;
+            //height: 100%;
+            transition: transform 0.5s ease; /* Added transition for smooth rotation */
+            transform-origin: top left; /* Set the origin for rotation */
         }
 
         #content-wrapper {
             display: flex;
             flex: 1;
-            width: 100%;
-            transition: transform 0.5s ease; /* Added transition for smooth rotation */
-            transform-origin: center center; /* Set the origin for rotation */
+            //transition: transform 0.5s ease; /* Added transition for smooth rotation */
+            //transform-origin: center center; /* Set the origin for rotation */
         }
 
         #left-bar, #right-bar {
@@ -65,7 +75,16 @@
             background-color: #d0d0d0;
         }
 
-        #left-bar button:nth-child(3),
+        #left-bar button:nth-child(2),
+        #right-bar button:nth-child(2) {
+            transform: none;
+            white-space: normal;
+            font-size: 18px;
+            padding: 10px 15px;
+            height: 10em;
+        }
+
+        #left-bar button:nth-child(2),
         #right-bar button:nth-child(2) {
             transform: none;
             white-space: normal;
@@ -80,7 +99,9 @@
             align-items: center;
             justify-content: flex-start;
             padding: 20px;
-            overflow-y: auto;
+            //overflow: auto;
+            //overflow-y: auto;
+            //overflow-x: auto;
             box-sizing: border-box;
         }
 
@@ -336,12 +357,15 @@
             window.loadDiscoverVideos = loadDiscoverVideos;
 
             function rotateContent() {
-                const contentWrapper = document.getElementById('content-wrapper');
                 isRotated = !isRotated;
                 if (isRotated) {
-                    contentWrapper.style.transform = 'rotate(90deg)';
+                    document.body.style.transform = `translate(${window.innerWidth}px, 0) rotate(90deg)`;
+                    document.body.style.height = '100vw';
+                    document.body.style.width = '100vh';
                 } else {
-                    contentWrapper.style.transform = 'rotate(0deg)';
+                    document.body.style.transform = 'rotate(0deg)';
+                    document.body.style.width = '100vw';
+                    document.body.style.height = '100vh';
                 }
             }
             window.rotateContent = rotateContent;
@@ -354,8 +378,8 @@
     <div id="content-wrapper">
         <div id="left-bar">
             <button onclick="loadSuggestedVideos()">Ajánlatok</button>
-            <button onclick="loadDiscoverVideos()">Felfedezés</button>
             <button onclick="prevVideo()">&#8592;</button>
+            <button onclick="loadDiscoverVideos()">Felfedezés</button>
         </div>
         <div id="main-content">
             <div id="page-title"></div>
