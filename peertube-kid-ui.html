@@ -27,27 +27,27 @@
             width: 100%;
         }
 
-        #content-wrapper {
+                #content-wrapper {
             display: flex;
             flex: 1;
             width: 100%;
         }
 
         #left-bar, #right-bar {
-            width: 60px; /* Slightly wider for better readability */
+            width: 60px;
             background-color: #e0e0e0;
-            padding: 10px 0;
+            padding: 20px 0; /* Increased padding */
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between; /* Space between buttons */
             box-sizing: border-box;
         }
 
         #left-bar button, #right-bar button {
             transform: rotate(-90deg);
             white-space: nowrap;
-            margin: 8px 0;
+            margin: 0; /* Remove default margin */
             padding: 8px 12px;
             border: 1px solid #ccc;
             background-color: #f0f0f0;
@@ -68,7 +68,7 @@
         #right-bar button:nth-child(2) {
             transform: none;
             white-space: normal;
-            font-size: 18px; /* Slightly larger arrows */
+            font-size: 18px;
             padding: 10px 15px;
         }
 
