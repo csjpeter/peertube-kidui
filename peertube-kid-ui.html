@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="
-      default-src     'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      media-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      img-src         'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      font-src        'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      worker-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      script-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      script-src-attr 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      style-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
-      style-src-elem  'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        default-src     'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        media-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        img-src         'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        font-src        'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        worker-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        script-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        script-src-attr 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        style-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        style-src-elem  'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
     ">
     <title>Kid-Friendly PeerTube</title>
     <style>
@@ -27,7 +27,7 @@
             width: 100%;
         }
 
-                #content-wrapper {
+        #content-wrapper {
             display: flex;
             flex: 1;
             width: 100%;
@@ -36,18 +36,18 @@
         #left-bar, #right-bar {
             width: 60px;
             background-color: #e0e0e0;
-            padding: 20px 0; /* Increased padding */
+            padding: 20px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* Space between buttons */
+            justify-content: space-between;
             box-sizing: border-box;
         }
 
         #left-bar button, #right-bar button {
             transform: rotate(-90deg);
             white-space: nowrap;
-            margin: 0; /* Remove default margin */
+            margin: 0;
             padding: 8px 12px;
             border: 1px solid #ccc;
             background-color: #f0f0f0;
@@ -63,8 +63,7 @@
             background-color: #d0d0d0;
         }
 
-        /* Override rotation for arrow buttons */
-        #left-bar button:nth-child(2),
+        #left-bar button:nth-child(3),
         #right-bar button:nth-child(2) {
             transform: none;
             white-space: normal;
@@ -188,7 +187,6 @@
                 });
             }
 
-
             // suggested
 
             async function loadSuggestedVideos() {
@@ -260,7 +258,6 @@
                     div.classList.add('list-item');
                     div.innerHTML = `${playlist.displayName}<br/>`;
                     div.onclick = () => loadPlaylistVideos(playlist);
-                    //listEl.appendChild(div);
                     listEl.prepend(div);
                 });
             }
@@ -282,8 +279,7 @@
             // play video
 
             function nextVideo() {
-                if (currentIndex < currentVideos.length - 1)
-                {
+                if (currentIndex < currentVideos.length - 1) {
                     currentIndex++;
                     video = currentVideos[currentIndex];
                     let vid = video.video ?? video;
@@ -293,8 +289,7 @@
             window.nextVideo = nextVideo;
 
             function prevVideo() {
-                if (currentIndex > 0)
-                {
+                if (currentIndex > 0) {
                     currentIndex--;
                     video = currentVideos[currentIndex];
                     let vid = video.video ?? video;
@@ -319,24 +314,28 @@
                     currDescEl.innerHTML = `<p></p>`;
 
                 const playerContainer = document.getElementById('embed-container');
-                    playerContainer.style.display = 'flex';
+                playerContainer.style.display = 'flex';
                 const embedEl = document.getElementById('embed-player');
-                let path = video.embedPath+"?autoplay=true"
+                let path = video.embedPath + "?autoplay=true"
                 embedEl.src = path;
                 embedEl.style.display = 'block';
-
-                //console.log(video);
-                //const playerContainer = document.getElementById('player-container');
-                //    playerContainer.style.display = 'flex';
-                //const player = document.getElementById('player');
-                /*
-                video.files.forEach(file => {
-                    currDescEl.innerHTML += file.embedPath;
-                    player.src = `blob:${BASE_URL}/${file.embedPath}`;
-                    //player.src = `blob:${BASE_URL}/${file.fileUrl}`;
-                    player.play();
-                });*/
             }
+
+            // discover
+
+            async function loadDiscoverVideos() {
+                const response = await fetch(`${API_URL}/videos/discover`);
+                const data = await response.json();
+
+                clearPage();
+
+                const currChEl = document.getElementById('page-title');
+                currChEl.innerHTML = `<h1>Felfedezés</h1>`;
+                currChEl.style.display = 'block';
+
+                showVideoList(data.data);
+            }
+            window.loadDiscoverVideos = loadDiscoverVideos;
 
             loadSuggestedVideos();
         });
@@ -346,6 +345,7 @@
     <div id="content-wrapper">
         <div id="left-bar">
             <button onclick="loadSuggestedVideos()">Ajánlatok</button>
+            <button onclick="loadDiscoverVideos()">Felfedezés</button>
             <button onclick="prevVideo()">&#8592;</button>
         </div>
         <div id="main-content">
@@ -356,11 +356,7 @@
             <div id="embed-container">
                 <iframe id="embed-player" allowfullscreen></iframe>
             </div>
-            <!--
-            <div id="player-container">
-                <video id="player" controls></video>
-            </div>
-            -->
+
             <div id="video-description"></div>
 
         </div>
