@@ -47,7 +47,6 @@
             display: flex;
             background-color: #e0e0e0;
             align-items: center;
-            justify-content: space-between;
             box-sizing: border-box;
             margin: 0ex;
             padding: 0px;
@@ -55,15 +54,28 @@
 
         #top-bar {
             flex-direction: row;
+            justify-content: space-between;
+            justify-content: center;
             padding-top: 1ex;
             padding-bottom: 1ex;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            z-index: 1000;
         }
 
         #right-bar {
+            display: none;
             flex-direction: column;
+            justify-content: flex-start;
+            justify-content: center;
+            padding: 0ex;
+            position: fixed;
+            top: 0px;
+            right: 0px;
             height: 100vh;
-            padding-left: 1ex;
-            padding-right: 1ex;
+            z-index: 1000;
         }
 
         #top-bar button, #right-bar button {
@@ -83,8 +95,26 @@
             transition: background-color 0.3s ease;
         }
 
+        #top-bar button, #right-bar button {
+            margin-left: 1ex;
+            margin-right: 1ex;
+        }
+
         #right-bar button {
-            transform: rotate(-90deg);
+            margin-top: 1ex;
+            margin-bottom: 1ex;
+        }
+
+        @media (pointer: coarse) and (orientation: landscape) {
+            #top-bar {
+                display: none;
+            }
+        }
+
+        @media (pointer: coarse) and (orientation: landscape) {
+            #right-bar {
+                display: flex;
+            }
         }
 
         #top-bar button:hover {
