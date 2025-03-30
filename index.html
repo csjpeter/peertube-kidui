@@ -381,6 +381,15 @@
                     div.classList.add('list-item');
                     div.innerHTML = `${channel.displayName}`;
                     div.onclick = () => loadChannelVideos(channel);
+
+		    // Create thumbnail image if available
+		    if (channel.thumbnail) {
+			    let img = document.createElement('img');
+			    img.src = channel.thumbnail;
+			    img.alt = `Thumbnail for ${channel.displayName}`;
+			    div.appendChild(img);
+		    }
+
                     listEl.appendChild(div);
                 });
             }
@@ -419,6 +428,15 @@
                     div.classList.add('list-item');
                     div.innerHTML = `${playlist.displayName}<br/>`;
                     div.onclick = () => loadPlaylistVideos(playlist);
+
+		    // Create thumbnail image if available
+		    if (playlist.thumbnail) {
+			    let img = document.createElement('img');
+			    img.src = playlist.thumbnail;
+			    img.alt = `Thumbnail for ${playlist.displayName}`;
+			    div.appendChild(img);
+		    }
+
                     listEl.prepend(div);
                 });
             }
