@@ -348,8 +348,8 @@
             }
 
             // suggested
-            async function loadSuggestedVideos() {
-                const response = await fetch(`${API_URL}/videos?sort=-views`);
+            async function lastWatched() {
+                const response = await fetch(`${API_URL}/videos?sort=-views&count=50`);
                 const data = await response.json();
 
                 clearPage();
@@ -360,11 +360,11 @@
 
                 showVideoList(data.data);
             }
-            window.loadSuggestedVideos = loadSuggestedVideos;
+            window.lastWatched = lastWatched;
 
             // channels
             async function loadChannels() {
-                const response = await fetch(`${API_URL}/video-channels`);
+                const response = await fetch(`${API_URL}/video-channels?count=100`);
                 const data = await response.json();
                 let channels = data.data;
 
@@ -387,7 +387,7 @@
             window.loadChannels = loadChannels;
 
             async function loadChannelVideos(channel) {
-                let url = `${API_URL}/video-channels/${channel.name}/videos`;
+                let url = `${API_URL}/video-channels/${channel.name}/videos?count=100`;
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -397,16 +397,20 @@
                 currChEl.innerHTML = `<h1>${channel.displayName}</h1>`;
                 currChEl.style.display = 'block';
 
-                loadPlaylists(channel);
-
                 showVideoList(data.data);
             }
 
             // playlists
-            async function loadPlaylists(channel) {
-                const response = await fetch(`${API_URL}/video-channels/${channel.name}/video-playlists`);
+            async function loadPlaylists() {
+                const response = await fetch(`${API_URL}/video-playlists?count=100`);
                 const data = await response.json();
                 let playlists = data.data;
+
+                clearPage();
+
+                const currChEl = document.getElementById('page-title');
+                currChEl.innerHTML = `<h1>Lejátszási Listák</h1>`;
+                currChEl.style.display = 'block';
 
                 const listEl = document.getElementById('content-list');
                 listEl.style.display = 'flex';
@@ -418,6 +422,7 @@
                     listEl.prepend(div);
                 });
             }
+            window.loadPlaylists = loadPlaylists;
 
             async function loadPlaylistVideos(playlist) {
                 let url = `${API_URL}/video-playlists/${playlist.id}/videos`;
@@ -440,7 +445,6 @@
                     video = currentVideos[currentIndex];
                     let vid = video.video ?? video;
                     playVideo(vid);
-                    //window.location = KID_URL + "/play.html&video_name=" + encodeURIComponent(video.name);
                 }
             }
             window.nextVideo = nextVideo;
@@ -458,7 +462,9 @@
             function playVideo(video) {
                 clearPage();
 
-                currentIndex = currentVideos.findIndex(v => v.id === video.id);
+                currentIndex = currentVideos.findIndex(v => v.shortUUID === video.shortUUID);
+		if (currentIndex == -1)
+			currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
 
                 const currViEl = document.getElementById('page-title');
                 currViEl.innerHTML = `<h4>${video.name}</h4>`;
@@ -476,17 +482,19 @@
                 let path = video.embedPath + "?autoplay=true"
                 embedEl.src = path;
                 embedEl.style.display = 'block';
+
+                const iframe = document.getElementById('embed-player');
+                iframe.addEventListener('load', () => {
+                    const video = iframe.contentDocument.querySelector('video');
+                    if (video === null)
+			return;
+                    video.addEventListener('ended', () => {
+                        nextVideo();
+                    });
+                });
             }
 
-            const iframe = document.getElementById('embed-player');
-            iframe.addEventListener('load', () => {
-                const video = iframe.contentDocument.querySelector('video');
-                video.addEventListener('ended', () => {
-                    nextVideo();
-                });
-            });
-
-            loadSuggestedVideos();
+            lastWatched();
         });
     </script>
 </head>
@@ -495,8 +503,8 @@
         <div id="top-bar">
             <button onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
             <button onclick="prevVideo()">Előző</button>
-            <button onclick="loadSuggestedVideos()">Ajánl.</button>
             <button onclick="loadChannels()">Csat.</button>
+            <button onclick="loadPlaylists()">Listák</button>
             <button onclick="nextVideo()">Köv.</button>
         </div>
         <div id="main-content">
@@ -513,8 +521,8 @@
             </div>
             <div id="right-bar">
                 <button onclick="toggleFullScreen()"</button>
-                <button onclick="loadSuggestedVideos()">Ajánl.</button>
                 <button onclick="loadChannels()">Csat.</button>
+                <button onclick="loadPlaylists()">Listák</button>
                 <button onclick="prevVideo()">Előző</button>
                 <button onclick="nextVideo()">Köv.</button>
             </div>
