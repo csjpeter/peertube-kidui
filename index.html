@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src     'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        media-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        img-src         'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        font-src        'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        worker-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        script-src      'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        script-src-attr 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        style-src       'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+        style-src-elem  'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+    ">
+    <title>Kid-Friendly PeerTube</title>
+    <style>
+        html {
+            display: flex;
+            flex: 1;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex: 1;
+            margin: 0;
+            transition: transform 0.5s ease; /* Added transition for smooth rotation */
+            transform-origin: top left; /* Set the origin for rotation */
+        }
+
+        #content-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            width: 100vw;
+        }
+
+        #top-bar, #right-bar {
+            display: flex;
+            background-color: #e0e0e0;
+            align-items: center;
+            box-sizing: border-box;
+            margin: 0ex;
+            padding: 0px;
+        }
+
+        #top-bar {
+            flex-direction: row;
+            justify-content: space-between;
+            justify-content: center;
+            padding-top: 1ex;
+            padding-bottom: 1ex;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        #right-bar {
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            justify-content: center;
+            padding: 0ex;
+            position: fixed;
+            top: 0px;
+            right: 0px;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        #top-bar button, #right-bar button {
+            height: 5ex;
+            white-space: nowrap;
+            margin: 0px;
+            padding: 0px;
+            padding-left: 2ex;
+            padding-right: 2ex;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            color: #555;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 2ex;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        #top-bar button, #right-bar button {
+            margin-left: 1ex;
+            margin-right: 1ex;
+        }
+
+        #right-bar button {
+            margin-top: 1ex;
+            margin-bottom: 1ex;
+        }
+
+        @media (pointer: coarse) and (orientation: landscape) {
+            #top-bar {
+                display: none;
+            }
+        }
+
+        @media (pointer: coarse) and (orientation: landscape) {
+            #right-bar {
+                display: flex;
+            }
+        }
+
+        #top-bar button:hover {
+            background-color: #d0ddd0;
+        }
+
+        @media (pointer: coarse) {
+            #top-bar button:hover {
+                background-color: #f0f0f0;
+            }
+        }
+
+        #main-content {
+            display: flex;
+            flex: 1;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        #sub-content {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        #page-title h1, #page-title h4 {
+            color: #444;
+            margin: 1ex;
+            text-align: center;
+        }
+
+        @media (pointer: coarse) {
+            #page-title h1, #page-title h4 {
+                margin: 0.5ex;
+            }
+        }
+
+        #content-list {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .video-item {
+            margin: 0.5ex;
+            padding: 0ex;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            width: 40ex;
+            box-sizing: border-box;
+            background-color: white;
+            border-radius: 1ex;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        .video-item img {
+            width: 100%;
+            padding: 0ex;
+            margin: 0ex;
+        }
+
+        .video-item p {
+            margin: 0ex;
+            padding-top: 0.5ex;
+            padding-bottom: 1ex;
+            padding-left: 1ex;
+            padding-right: 1ex;
+        }
+
+        .list-item {
+            margin: 0.5ex;
+            padding: 1ex;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            width: 40ex;
+            box-sizing: border-box;
+            background-color: white;
+            border-radius: 1ex;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        @media (pointer: coarse) and (orientation: portrait) {
+            .video-item {
+                width: 100%;
+            }
+            .list-item {
+                width: 100%;
+            }
+        }
+
+        @media (pointer: coarse) and (orientation: landscape) {
+            .video-item {
+                width: 40%;
+            }
+            .list-item {
+                width: 40%;
+            }
+        }
+
+        .video-item:hover, .list-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin: 0ex;
+            padding: 0ex;
+        }
+
+        #embed-container {
+            width: 100%;
+            display: none;
+        }
+
+        #embed-player {
+            width: 100%;
+            height: 90vh;
+            box-sizing: border-box;
+            border: none;
+        }
+
+        #video-description {
+            margin-top: 1ex;
+            text-align: center;
+            box-sizing: border-box;
+            color: #666;
+        }
+    </style>
+    <script>
+        // Function to toggle full-screen mode
+        function toggleFullScreen() {
+            if (!document.fullscreenElement &&    // If not in full-screen mode
+             !document.webkitFullscreenElement && // For Safari
+             !document.mozFullScreenElement && // For Firefox
+             !document.msFullscreenElement) {  // For IE/Edge
+                // Request full-screen on the document
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) {
+                    document.documentElement.mozRequestFullScreen(); // Firefox
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen(); // Safari
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen(); // IE/Edge
+                }
+            } else {
+                // Exit full-screen mode
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen(); // Firefox
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen(); // Safari
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen(); // IE/Edge
+                }
+            }
+            if (document.fullscreenElement) {
+                // Update button text to show "Exit Full Screen"
+                document.getElementById('fullscreenButton').textContent = '&nbsp;X&nbsp;';
+            } else {
+                // Update button text to show "Go Full Screen"
+                document.getElementById('fullscreenButton').textContent = '[&nbsp;&nbsp;]';
+            }
+        }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
+            const KID_URL = `${window.location.protocol}//${window.location.hostname}/kidui`;
+            const API_URL = `${window.location.protocol}//${window.location.hostname}/api/v1`;
+            let currentVideos = [];
+            let currentIndex = 0;
+
+            function ellipseString(str, maxLength = 40) {
+                if (str.length <= maxLength) {
+                    return str;
+                }
+                return str.substring(0, maxLength - 3) + "...";
+            }
+
+            function clearPage() {
+                document.getElementById('page-title').innerHTML = '';
+                document.getElementById('content-list').innerHTML = '';
+                document.getElementById('content-list').style.display = 'none';
+
+                const embedEl = document.getElementById('embed-player');
+                embedEl.src = "";
+                embedEl.style.display = 'none';
+                const currDescEl = document.getElementById('video-description');
+                currDescEl.innerHTML = `<p></p>`;
+            }
+
+            function showVideoList(videos) {
+                currentVideos = videos;
+                currentIndex = 0;
+
+                const listEl = document.getElementById('content-list');
+                listEl.style.display = 'flex';
+                videos.forEach(video => {
+                    let vid = video.video ?? video;
+
+                    if (!vid || !vid.thumbnailPath || !vid.name) {
+                        console.warn("Skipping invalid video entry:", vid);
+                        return;
+                    }
+
+                    let div = document.createElement('div');
+                    div.classList.add('video-item');
+                    let thumbnailUrl = `${BASE_URL}${vid.thumbnailPath}`;
+                    let desc = ellipseString(vid.name);
+                    div.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail"><p>${desc}</p>`;
+                    div.onclick = () => playVideo(vid);
+                    listEl.appendChild(div);
+                });
+            }
+
+            // suggested
+            async function loadSuggestedVideos() {
+                const response = await fetch(`${API_URL}/videos?sort=-views`);
+                const data = await response.json();
+
+                clearPage();
+
+                const currChEl = document.getElementById('page-title');
+                currChEl.innerHTML = `<h1>Ajánlatok</h1>`;
+                currChEl.style.display = 'block';
+
+                showVideoList(data.data);
+            }
+            window.loadSuggestedVideos = loadSuggestedVideos;
+
+            // channels
+            async function loadChannels() {
+                const response = await fetch(`${API_URL}/video-channels`);
+                const data = await response.json();
+                let channels = data.data;
+
+                clearPage();
+
+                const currChEl = document.getElementById('page-title');
+                currChEl.innerHTML = `<h1>Csatornák</h1>`;
+                currChEl.style.display = 'block';
+
+                const listEl = document.getElementById('content-list');
+                listEl.style.display = 'flex';
+                channels.forEach(channel => {
+                    let div = document.createElement('div');
+                    div.classList.add('list-item');
+                    div.innerHTML = `${channel.displayName}`;
+                    div.onclick = () => loadChannelVideos(channel);
+                    listEl.appendChild(div);
+                });
+            }
+            window.loadChannels = loadChannels;
+
+            async function loadChannelVideos(channel) {
+                let url = `${API_URL}/video-channels/${channel.name}/videos`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                clearPage();
+
+                const currChEl = document.getElementById('page-title');
+                currChEl.innerHTML = `<h1>${channel.displayName}</h1>`;
+                currChEl.style.display = 'block';
+
+                loadPlaylists(channel);
+
+                showVideoList(data.data);
+            }
+
+            // playlists
+            async function loadPlaylists(channel) {
+                const response = await fetch(`${API_URL}/video-channels/${channel.name}/video-playlists`);
+                const data = await response.json();
+                let playlists = data.data;
+
+                const listEl = document.getElementById('content-list');
+                listEl.style.display = 'flex';
+                playlists.forEach(playlist => {
+                    let div = document.createElement('div');
+                    div.classList.add('list-item');
+                    div.innerHTML = `${playlist.displayName}<br/>`;
+                    div.onclick = () => loadPlaylistVideos(playlist);
+                    listEl.prepend(div);
+                });
+            }
+
+            async function loadPlaylistVideos(playlist) {
+                let url = `${API_URL}/video-playlists/${playlist.id}/videos`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                clearPage();
+
+                const currPlEl = document.getElementById('page-title');
+                currPlEl.innerHTML = `<h1>${playlist.displayName}</h1>`;
+                currPlEl.style.display = 'block';
+
+                showVideoList(data.data);
+            }
+
+            // play video
+            function nextVideo() {
+                if (currentIndex < currentVideos.length - 1) {
+                    currentIndex++;
+                    video = currentVideos[currentIndex];
+                    let vid = video.video ?? video;
+                    playVideo(vid);
+                    //window.location = KID_URL + "/play.html&video_name=" + encodeURIComponent(video.name);
+                }
+            }
+            window.nextVideo = nextVideo;
+
+            function prevVideo() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    video = currentVideos[currentIndex];
+                    let vid = video.video ?? video;
+                    playVideo(vid);
+                }
+            }
+            window.prevVideo = prevVideo;
+
+            function playVideo(video) {
+                clearPage();
+
+                currentIndex = currentVideos.findIndex(v => v.id === video.id);
+
+                const currViEl = document.getElementById('page-title');
+                currViEl.innerHTML = `<h4>${video.name}</h4>`;
+                currViEl.style.display = 'none';
+
+                const currDescEl = document.getElementById('video-description');
+                if (video.description != null)
+                    currDescEl.innerHTML = `<h3>${video.name}</h3><p>${video.description}</p>`;
+                else
+                    currDescEl.innerHTML = `<p></p>`;
+
+                const playerContainer = document.getElementById('embed-container');
+                playerContainer.style.display = 'flex';
+                const embedEl = document.getElementById('embed-player');
+                let path = video.embedPath + "?autoplay=true"
+                embedEl.src = path;
+                embedEl.style.display = 'block';
+            }
+
+            const iframe = document.getElementById('embed-player');
+            iframe.addEventListener('load', () => {
+                const video = iframe.contentDocument.querySelector('video');
+                video.addEventListener('ended', () => {
+                    nextVideo();
+                });
+            });
+
+            loadSuggestedVideos();
+        });
+    </script>
+</head>
+<body>
+    <div id="content-wrapper">
+        <div id="top-bar">
+            <button onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
+            <button onclick="prevVideo()">Előző</button>
+            <button onclick="loadSuggestedVideos()">Ajánl.</button>
+            <button onclick="loadChannels()">Csat.</button>
+            <button onclick="nextVideo()">Köv.</button>
+        </div>
+        <div id="main-content">
+            <div id="sub-content">
+                <div id="page-title"></div>
+
+                <div id="content-list"></div>
+
+                <div id="embed-container">
+                    <iframe id="embed-player" allowfullscreen sandbox="allow-scripts allow-same-origin"></iframe>
+                </div>
+
+                <div id="video-description"></div>
+            </div>
+            <div id="right-bar">
+                <button onclick="toggleFullScreen()"</button>
+                <button onclick="loadSuggestedVideos()">Ajánl.</button>
+                <button onclick="loadChannels()">Csat.</button>
+                <button onclick="prevVideo()">Előző</button>
+                <button onclick="nextVideo()">Köv.</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
