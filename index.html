@@ -515,6 +515,47 @@
             lastWatched();
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        // Create a container div to log key events
+        const logDiv = document.createElement('div');
+        logDiv.id = 'log-container';
+        logDiv.style.position = 'fixed';
+        logDiv.style.top = '10px';
+        logDiv.style.left = '10px';
+        logDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        logDiv.style.color = 'white';
+        logDiv.style.padding = '10px';
+        logDiv.style.maxWidth = '300px';
+        logDiv.style.overflowY = 'auto';
+        logDiv.style.zIndex = '1000';
+        //document.body.appendChild(logDiv);
+
+        // Function to append log messages to the logDiv
+        function logMessage(message) {
+            const newMessage = document.createElement('p');
+            newMessage.textContent = message;
+            logDiv.prepend(newMessage);
+
+            // Optional: Auto-scroll to the latest message
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Detect keydown events for media keys (try using key instead of code)
+        document.addEventListener('keydown', function(event) {
+            const logText = `Key pressed: ${event.key}`;
+            logMessage(logText);  // Log the key to the log container
+
+            if (event.key === 'ArrowRight') {  // Right arrow or next
+                nextVideo();
+            }
+
+            if (event.key === 'ArrowLeft') {  // Left arrow or prev
+                prevVideo();
+            }
+        });
+        });
+</script>
 </head>
 <body>
     <div id="content-wrapper">
