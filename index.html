@@ -349,7 +349,7 @@
 
             // suggested
             async function lastWatched() {
-                const response = await fetch(`${API_URL}/videos?sort=-views&count=50`);
+                const response = await fetch(`${API_URL}/videos?sort=-views&count=100`);
                 const data = await response.json();
 
                 clearPage();
