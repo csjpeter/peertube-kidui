@@ -647,25 +647,63 @@
                     document.msExitFullscreen(); // IE/Edge
                 }
             }
-            if (document.fullscreenElement)
-            {
-                // Update button text to show "Exit Full Screen"
-                document.getElementById('fullscreenButton').textContent = '&nbsp;X&nbsp;';
-            } else {
-                // Update button text to show "Go Full Screen"
-                document.getElementById('fullscreenButton').textContent = '[&nbsp;&nbsp;]';
-            }
         } //}}}
+    </script>
+    <script>
+        function updateTexts()
+        {
+            const translations = {
+                en: {
+                    btn_fullscreen_top   : "Fullscreen",
+                    btn_channels_top     : "Channels",
+                    btn_playlists_top    : "Playlists",
+                    btn_prev_top         : "Previous",
+                    btn_next_top         : "Next",
+                    btn_fullscreen_right : "[]",
+                    btn_channels_right   : "Channel",
+                    btn_playlists_right  : "Playl",
+                    btn_prev_right       : "Prev",
+                    btn_next_right       : "Next",
+                },
+                hu: {
+                    btn_fullscreen_top   : "Teljes képernyő",
+                    btn_channels_top     : "Csatornák",
+                    btn_playlists_top    : "Lejátszási listák",
+                    btn_prev_top         : "Előző",
+                    btn_next_top         : "Következő",
+                    btn_fullscreen_right : "[]",
+                    btn_channels_right   : "Csat.",
+                    btn_playlists_right  : "Listák",
+                    btn_prev_right       : "Előző",
+                    btn_next_right       : "Köv.",
+                }
+            };
+
+            // Detect locale (fallback to 'en')
+            const userLang = navigator.language.slice(0, 2); // e.g., "hu", "en"
+            const lang = translations[userLang] ? userLang : 'en';
+
+            // Update text content
+            for (const [id, text] of Object.entries(translations[lang]))
+            {
+                const el = document.getElementById(id);
+                if (el)
+                {
+                    el.textContent = text;
+                }
+            }
+        }
+        document.addEventListener("DOMContentLoaded", updateTexts);
     </script>
 </head>
 <body>
     <div id="content-wrapper">
         <div id="top-bar">
-            <button onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
-            <button onclick="loadChannels()">Csat.</button>
-            <button onclick="loadPlaylists()">Listák</button>
-            <button onclick="prevVideo()">Előző</button>
-            <button onclick="nextVideo()">Köv.</button>
+            <button id="btn_fullscreen_top" onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
+            <button id="btn_channels_top"   onclick="loadChannels()">Csat.</button>
+            <button id="btn_playlists_top"  onclick="loadPlaylists()">Listák</button>
+            <button id="btn_prev_top"       onclick="prevVideo()">Előző</button>
+            <button id="btn_next_top"       onclick="nextVideo()">Köv.</button>
             <span class="current-index"></span>
         </div>
         <div id="main-content">
@@ -681,11 +719,11 @@
                 <div id="video-description"></div>
             </div>
             <div id="right-bar">
-                <button onclick="toggleFullScreen()"</button>
-                <button onclick="loadChannels()">Csat.</button>
-                <button onclick="loadPlaylists()">Listák</button>
-                <button onclick="prevVideo()">Előző</button>
-                <button onclick="nextVideo()">Köv.</button>
+                <button id="btn_fullscreen_right" onclick="toggleFullScreen()"</button>
+                <button id="btn_channels_right"   onclick="loadChannels()">Csat.</button>
+                <button id="btn_playlists_right"  onclick="loadPlaylists()">Listák</button>
+                <button id="btn_prev_right"       onclick="prevVideo()">Előző</button>
+                <button id="btn_next_right"       onclick="nextVideo()">Köv.</button>
                 <span class="current-index"></span>
             </div>
         </div>
