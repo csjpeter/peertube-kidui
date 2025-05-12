@@ -17,7 +17,7 @@
     ">
     <title>Kid-Friendly PeerTube</title>
     <style>
-        // {{{
+        /* {{{ */
         html {
             display: flex;
             flex: 1;
@@ -260,57 +260,8 @@
             box-sizing: border-box;
             color: #666;
         }
-        // }}}
+        /* }}} */
     </style>
-    <script>
-        // Function to toggle full-screen mode
-        function toggleFullScreen() //{{{
-        {
-            if (!document.fullscreenElement &&    // If not in full-screen mode
-                !document.webkitFullscreenElement && // For Safari
-                !document.mozFullScreenElement && // For Firefox
-                !document.msFullscreenElement)   // For IE/Edge
-            {
-                // Request full-screen on the document
-                if (document.documentElement.requestFullscreen)
-                {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.mozRequestFullScreen)
-                {
-                    document.documentElement.mozRequestFullScreen(); // Firefox
-                } else if (document.documentElement.webkitRequestFullscreen)
-                {
-                    document.documentElement.webkitRequestFullscreen(); // Safari
-                } else if (document.documentElement.msRequestFullscreen)
-                {
-                    document.documentElement.msRequestFullscreen(); // IE/Edge
-                }
-            } else {
-                // Exit full-screen mode
-                if (document.exitFullscreen)
-                {
-                    document.exitFullscreen();
-                } else if (document.mozCancelFullScreen)
-                {
-                    document.mozCancelFullScreen(); // Firefox
-                } else if (document.webkitExitFullscreen)
-                {
-                    document.webkitExitFullscreen(); // Safari
-                } else if (document.msExitFullscreen)
-                {
-                    document.msExitFullscreen(); // IE/Edge
-                }
-            }
-            if (document.fullscreenElement)
-            {
-                // Update button text to show "Exit Full Screen"
-                document.getElementById('fullscreenButton').textContent = '&nbsp;X&nbsp;';
-            } else {
-                // Update button text to show "Go Full Screen"
-                document.getElementById('fullscreenButton').textContent = '[&nbsp;&nbsp;]';
-            }
-        } //}}}
-    </script>
 
     <script>
         function videoPlayer()
@@ -320,11 +271,15 @@
             const API_URL = `${window.location.protocol}//${window.location.hostname}/api/v1`;
             let currentVideos = [];
             let currentIndex = 0;
+            let startingNextVideo = false;
 
-            function updateProgress() //{{{
+            function updateIndex() //{{{
             {
-                const indexEl = document.getElementById('current-index');
-                indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
+                // Find all elements by class 'current-index' and iterate through them.
+                const indexEls = document.querySelectorAll('.current-index');
+                indexEls.forEach(indexEl => {
+                    indexEl.innerHTML = `<span>${currentIndex + 1}/${currentVideos.length}</span>`;
+                });
             } //}}}
 
             function ellipseString(str, maxLength = 40) //{{{
@@ -373,10 +328,9 @@
                     div.onclick = () => playVideo(vid);
                     listEl.appendChild(div);
                 });
-                updateProgress();
+                updateIndex();
             } //}}}
 
-            // channels
             async function loadChannels() //{{{
             {
                 const response = await fetch(`${API_URL}/video-channels?count=100`);
@@ -434,7 +388,6 @@
                 showVideoList(data.data);
             } //}}}
 
-            // playlists
             async function loadPlaylists() //{{{
             {
                 const response = await fetch(`${API_URL}/video-playlists?count=100`);
@@ -484,7 +437,6 @@
                 showVideoList(data.data);
             } //}}}
 
-            // play video
             function nextVideo() //{{{
             {
                 if (currentIndex < currentVideos.length - 1)
@@ -515,42 +467,58 @@
 
             function playVideo(video) //{{{
             {
-                clearPage();
+                startingNextVideo = true;
+                try {
+                    clearPage();
 
-                currentIndex = currentVideos.findIndex(v => v.shortUUID === video.shortUUID);
-                if (currentIndex == -1)
-                    currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
+                    currentIndex = currentVideos.findIndex(v => v.shortUUID === video.shortUUID);
+                    if (currentIndex == -1)
+                        currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
 
-                const currViEl = document.getElementById('page-title');
-                currViEl.innerHTML = `<h4>${video.name}</h4>`;
-                currViEl.style.display = 'none';
+                    const currViEl = document.getElementById('page-title');
+                    currViEl.innerHTML = `<h4>${video.name}</h4>`;
+                    currViEl.style.display = 'none';
 
-                const currDescEl = document.getElementById('video-description');
-                if (video.description != null)
-                    currDescEl.innerHTML = `<h3>${video.name}</h3><p>${video.description}</p>`;
-                else
-                    currDescEl.innerHTML = `<p></p>`;
+                    const currDescEl = document.getElementById('video-description');
+                    if (video.description != null)
+                        currDescEl.innerHTML = `<h3>${video.name}</h3><p>${video.description}</p>`;
+                    else
+                        currDescEl.innerHTML = `<p></p>`;
 
-                const playerContainer = document.getElementById('embed-container');
-                playerContainer.style.display = 'flex';
-                const embedEl = document.getElementById('embed-player');
-                let path = video.embedPath + "?autoplay=true"
-                embedEl.src = path;
-                embedEl.style.display = 'block';
+                    const playerContainer = document.getElementById('embed-container');
+                    playerContainer.style.display = 'flex';
+                    const embedEl = document.getElementById('embed-player');
+                    let path = video.embedPath + "?autoplay=true"
+                    embedEl.src = path;
+                    embedEl.style.display = 'block';
 
-                const iframe = document.getElementById('embed-player');
-                iframe.addEventListener('load', () => {
-                    const video = iframe.contentDocument.querySelector('video');
-                    if (video === null)
-                        return;
-                    video.addEventListener('ended', () => {
-                        nextVideo();
-                    });
-                });
-
-                const indexEl = document.getElementById('current-index');
-                    indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
+                    updateIndex();
+                } catch (e) {
+                    console.error("Error playing video:", e);
+                }
+                startingNextVideo = false;
             } //}}}
+
+            function videoEndedHandler() //{{{
+            {
+                if (startingNextVideo == false)
+                {
+                    console.log("Video "+currentIndex+" ended");
+                    nextVideo();
+                }
+            } //}}}
+
+            function embedPlayerLoadEventHander() //{{{
+            {
+                const iframe = document.getElementById('embed-player');
+                const video = iframe.contentDocument.querySelector('video');
+                if (video === null)
+                    return;
+                video.addEventListener('ended', videoEndedHandler);
+            } //}}}
+
+            const embedPlayer = document.getElementById('embed-player');
+            embedPlayer.addEventListener('load', embedPlayerLoadEventHander);
 
             async function loadSuggestedVideos() //{{{
             {
@@ -569,6 +537,7 @@
         }
         document.addEventListener("DOMContentLoaded", videoPlayer);
     </script>
+    <!--
     <script>
         function createKeyPressLogDiv() //{{{
             {
@@ -608,22 +577,27 @@
                 document.addEventListener('keydown', keyDownEvent);
             } //}}}
         //document.addEventListener("DOMContentLoaded", createKeyPressLogDiv);
+    </script>
+    <script>
 
         function wakeLocker() //{{{
         {
             let wakeLock = null;
 
+            const isWakeLockSupported = 'wakeLock' in navigator;
+            const ua = navigator.userAgent.toLowerCase();
+            const isFirefox = ua.includes("firefox");
+            const isSafari = ua.includes("safari") && !ua.includes("chrome");
+
             async function requestWakeLock()
             {
-                try {
+                if (isWakeLockSupported && !isFirefox && !isSafari) {
                     wakeLock = await navigator.wakeLock.request("screen");
                     console.log("Screen Wake Lock is active");
 
                     wakeLock.addEventListener("release", () => {
                         console.log("Screen Wake Lock was released");
                     });
-                } catch (err) {
-                    console.error(`Wake Lock error: ${err.message}`);
                 }
             }
 
@@ -636,6 +610,55 @@
         } //}}}
         document.addEventListener("DOMContentLoaded", wakeLocker);
     </script>
+    <script>
+        function toggleFullScreen() //{{{
+        {
+            if (!document.fullscreenElement &&    // If not in full-screen mode
+                !document.webkitFullscreenElement && // For Safari
+                !document.mozFullScreenElement && // For Firefox
+                !document.msFullscreenElement)   // For IE/Edge
+            {
+                // Request full-screen on the document
+                if (document.documentElement.requestFullscreen)
+                {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen)
+                {
+                    document.documentElement.mozRequestFullScreen(); // Firefox
+                } else if (document.documentElement.webkitRequestFullscreen)
+                {
+                    document.documentElement.webkitRequestFullscreen(); // Safari
+                } else if (document.documentElement.msRequestFullscreen)
+                {
+                    document.documentElement.msRequestFullscreen(); // IE/Edge
+                }
+            } else {
+                // Exit full-screen mode
+                if (document.exitFullscreen)
+                {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen)
+                {
+                    document.mozCancelFullScreen(); // Firefox
+                } else if (document.webkitExitFullscreen)
+                {
+                    document.webkitExitFullscreen(); // Safari
+                } else if (document.msExitFullscreen)
+                {
+                    document.msExitFullscreen(); // IE/Edge
+                }
+            }
+            if (document.fullscreenElement)
+            {
+                // Update button text to show "Exit Full Screen"
+                document.getElementById('fullscreenButton').textContent = '&nbsp;X&nbsp;';
+            } else {
+                // Update button text to show "Go Full Screen"
+                document.getElementById('fullscreenButton').textContent = '[&nbsp;&nbsp;]';
+            }
+        } //}}}
+    </script>
+    -->
 </head>
 <body>
     <div id="content-wrapper">
@@ -645,7 +668,7 @@
             <button onclick="loadPlaylists()">Listák</button>
             <button onclick="prevVideo()">Előző</button>
             <button onclick="nextVideo()">Köv.</button>
-            <span id="current-index"></span>
+            <span class="current-index"></span>
         </div>
         <div id="main-content">
             <div id="sub-content">
@@ -665,7 +688,7 @@
                 <button onclick="loadPlaylists()">Listák</button>
                 <button onclick="prevVideo()">Előző</button>
                 <button onclick="nextVideo()">Köv.</button>
-                <span id="current-index"></span>
+                <span class="current-index"></span>
             </div>
         </div>
     </div>
