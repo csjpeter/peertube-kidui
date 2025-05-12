@@ -307,6 +307,12 @@
             let currentVideos = [];
             let currentIndex = 0;
 
+            function updateProgress()
+            {
+                const indexEl = document.getElementById('current-index');
+                indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
+            }
+
             function ellipseString(str, maxLength = 40) {
                 if (str.length <= maxLength) {
                     return str;
@@ -348,6 +354,7 @@
                     div.onclick = () => playVideo(vid);
                     listEl.appendChild(div);
                 });
+                updateProgress();
             }
 
             // suggested
@@ -379,19 +386,27 @@
 
                 const listEl = document.getElementById('content-list');
                 listEl.style.display = 'flex';
+
+                // Sort channels alphabetically by displayName (case-insensitive)
+                channels.sort((a, b) => {
+                    let nameA = (a.displayName ?? "").toLowerCase();
+                    let nameB = (b.displayName ?? "").toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+
                 channels.forEach(channel => {
                     let div = document.createElement('div');
                     div.classList.add('list-item');
                     div.innerHTML = `${channel.displayName}`;
                     div.onclick = () => loadChannelVideos(channel);
 
-		    // Create thumbnail image if available
-		    if (channel.thumbnail) {
-			    let img = document.createElement('img');
-			    img.src = channel.thumbnail;
-			    img.alt = `Thumbnail for ${channel.displayName}`;
-			    div.appendChild(img);
-		    }
+                    // Create thumbnail image if available
+                    if (channel.thumbnail) {
+                        let img = document.createElement('img');
+                        img.src = channel.thumbnail;
+                        img.alt = `Thumbnail for ${channel.displayName}`;
+                        div.appendChild(img);
+                    }
 
                     listEl.appendChild(div);
                 });
@@ -463,20 +478,24 @@
             function nextVideo() {
                 if (currentIndex < currentVideos.length - 1) {
                     currentIndex++;
-                    video = currentVideos[currentIndex];
-                    let vid = video.video ?? video;
-                    playVideo(vid);
+                } else {
+                    currentIndex = 0;
                 }
+                video = currentVideos[currentIndex];
+                let vid = video.video ?? video;
+                playVideo(vid);
             }
             window.nextVideo = nextVideo;
 
             function prevVideo() {
                 if (currentIndex > 0) {
                     currentIndex--;
-                    video = currentVideos[currentIndex];
-                    let vid = video.video ?? video;
-                    playVideo(vid);
+                } else {
+                    currentIndex = currentVideos.length - 1;
                 }
+                video = currentVideos[currentIndex];
+                let vid = video.video ?? video;
+                playVideo(vid);
             }
             window.prevVideo = prevVideo;
 
@@ -484,8 +503,8 @@
                 clearPage();
 
                 currentIndex = currentVideos.findIndex(v => v.shortUUID === video.shortUUID);
-		if (currentIndex == -1)
-			currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
+		        if (currentIndex == -1)
+			        currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
 
                 const currViEl = document.getElementById('page-title');
                 currViEl.innerHTML = `<h4>${video.name}</h4>`;
@@ -508,66 +527,95 @@
                 iframe.addEventListener('load', () => {
                     const video = iframe.contentDocument.querySelector('video');
                     if (video === null)
-			return;
+                        return;
                     video.addEventListener('ended', () => {
                         nextVideo();
                     });
                 });
+
+                const indexEl = document.getElementById('current-index');
+                    indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
             }
 
             lastWatched();
         });
     </script>
+    <script> // Stepping prev/next by arrow keys
+        document.addEventListener("DOMContentLoaded", function() {
+            // Create a container div to log key events
+            const logDiv = document.createElement('div');
+            logDiv.id = 'log-container';
+            logDiv.style.position = 'fixed';
+            logDiv.style.top = '10px';
+            logDiv.style.left = '10px';
+            logDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            logDiv.style.color = 'white';
+            logDiv.style.padding = '10px';
+            logDiv.style.maxWidth = '300px';
+            logDiv.style.overflowY = 'auto';
+            logDiv.style.zIndex = '1000';
+            //document.body.appendChild(logDiv);
+
+            // Function to append log messages to the logDiv
+            function logMessage(message) {
+                const newMessage = document.createElement('p');
+                newMessage.textContent = message;
+                logDiv.prepend(newMessage);
+
+                // Optional: Auto-scroll to the latest message
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+
+            // Detect keydown events for media keys (try using key instead of code)
+            document.addEventListener('keydown', function(event) {
+                const logText = `Key pressed: ${event.key}`;
+                logMessage(logText);  // Log the key to the log container
+
+                if (event.key === 'ArrowRight') {  // Right arrow or next
+                    nextVideo();
+                }
+
+                if (event.key === 'ArrowLeft') {  // Left arrow or prev
+                    prevVideo();
+                }
+            });
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-        // Create a container div to log key events
-        const logDiv = document.createElement('div');
-        logDiv.id = 'log-container';
-        logDiv.style.position = 'fixed';
-        logDiv.style.top = '10px';
-        logDiv.style.left = '10px';
-        logDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        logDiv.style.color = 'white';
-        logDiv.style.padding = '10px';
-        logDiv.style.maxWidth = '300px';
-        logDiv.style.overflowY = 'auto';
-        logDiv.style.zIndex = '1000';
-        //document.body.appendChild(logDiv);
+            let wakeLock = null;
 
-        // Function to append log messages to the logDiv
-        function logMessage(message) {
-            const newMessage = document.createElement('p');
-            newMessage.textContent = message;
-            logDiv.prepend(newMessage);
+            async function requestWakeLock() {
+                try {
+                    wakeLock = await navigator.wakeLock.request("screen");
+                    console.log("Screen Wake Lock is active");
 
-            // Optional: Auto-scroll to the latest message
-            logDiv.scrollTop = logDiv.scrollHeight;
-        }
-
-        // Detect keydown events for media keys (try using key instead of code)
-        document.addEventListener('keydown', function(event) {
-            const logText = `Key pressed: ${event.key}`;
-            logMessage(logText);  // Log the key to the log container
-
-            if (event.key === 'ArrowRight') {  // Right arrow or next
-                nextVideo();
+                    wakeLock.addEventListener("release", () => {
+                        console.log("Screen Wake Lock was released");
+                    });
+                } catch (err) {
+                    console.error(`Wake Lock error: ${err.message}`);
+                }
             }
 
-            if (event.key === 'ArrowLeft') {  // Left arrow or prev
-                prevVideo();
-            }
+            // Call this function when the webapp starts playing videos
+            requestWakeLock();
+
+            setInterval(() => {
+                window.dispatchEvent(new Event("mousemove"));
+            }, 50000);            
         });
-        });
-</script>
+    </script>
 </head>
 <body>
     <div id="content-wrapper">
         <div id="top-bar">
             <button onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
-            <button onclick="prevVideo()">Előző</button>
             <button onclick="loadChannels()">Csat.</button>
             <button onclick="loadPlaylists()">Listák</button>
+            <button onclick="prevVideo()">Előző</button>
             <button onclick="nextVideo()">Köv.</button>
+            <span id="current-index"></span>
         </div>
         <div id="main-content">
             <div id="sub-content">
@@ -587,6 +635,7 @@
                 <button onclick="loadPlaylists()">Listák</button>
                 <button onclick="prevVideo()">Előző</button>
                 <button onclick="nextVideo()">Köv.</button>
+                <span id="current-index"></span>
             </div>
         </div>
     </div>
