@@ -262,34 +262,45 @@
     </style>
     <script>
         // Function to toggle full-screen mode
-        function toggleFullScreen() {
+        function toggleFullScreen()
+        {
             if (!document.fullscreenElement &&    // If not in full-screen mode
-             !document.webkitFullscreenElement && // For Safari
-             !document.mozFullScreenElement && // For Firefox
-             !document.msFullscreenElement) {  // For IE/Edge
+                !document.webkitFullscreenElement && // For Safari
+                !document.mozFullScreenElement && // For Firefox
+                !document.msFullscreenElement)   // For IE/Edge
+            {
                 // Request full-screen on the document
-                if (document.documentElement.requestFullscreen) {
+                if (document.documentElement.requestFullscreen)
+                {
                     document.documentElement.requestFullscreen();
-                } else if (document.documentElement.mozRequestFullScreen) {
+                } else if (document.documentElement.mozRequestFullScreen)
+                {
                     document.documentElement.mozRequestFullScreen(); // Firefox
-                } else if (document.documentElement.webkitRequestFullscreen) {
+                } else if (document.documentElement.webkitRequestFullscreen)
+                {
                     document.documentElement.webkitRequestFullscreen(); // Safari
-                } else if (document.documentElement.msRequestFullscreen) {
+                } else if (document.documentElement.msRequestFullscreen)
+                {
                     document.documentElement.msRequestFullscreen(); // IE/Edge
                 }
             } else {
                 // Exit full-screen mode
-                if (document.exitFullscreen) {
+                if (document.exitFullscreen)
+                {
                     document.exitFullscreen();
-                } else if (document.mozCancelFullScreen) {
+                } else if (document.mozCancelFullScreen)
+                {
                     document.mozCancelFullScreen(); // Firefox
-                } else if (document.webkitExitFullscreen) {
+                } else if (document.webkitExitFullscreen)
+                {
                     document.webkitExitFullscreen(); // Safari
-                } else if (document.msExitFullscreen) {
+                } else if (document.msExitFullscreen)
+                {
                     document.msExitFullscreen(); // IE/Edge
                 }
             }
-            if (document.fullscreenElement) {
+            if (document.fullscreenElement)
+            {
                 // Update button text to show "Exit Full Screen"
                 document.getElementById('fullscreenButton').textContent = '&nbsp;X&nbsp;';
             } else {
@@ -300,7 +311,8 @@
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function()
+        {
             const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
             const KID_URL = `${window.location.protocol}//${window.location.hostname}/kidui`;
             const API_URL = `${window.location.protocol}//${window.location.hostname}/api/v1`;
@@ -313,14 +325,17 @@
                 indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
             }
 
-            function ellipseString(str, maxLength = 40) {
-                if (str.length <= maxLength) {
+            function ellipseString(str, maxLength = 40)
+            {
+                if (str.length <= maxLength)
+                {
                     return str;
                 }
                 return str.substring(0, maxLength - 3) + "...";
             }
 
-            function clearPage() {
+            function clearPage()
+            {
                 document.getElementById('page-title').innerHTML = '';
                 document.getElementById('content-list').innerHTML = '';
                 document.getElementById('content-list').style.display = 'none';
@@ -332,7 +347,8 @@
                 currDescEl.innerHTML = `<p></p>`;
             }
 
-            function showVideoList(videos) {
+            function showVideoList(videos)
+            {
                 currentVideos = videos;
                 currentIndex = 0;
 
@@ -341,7 +357,8 @@
                 videos.forEach(video => {
                     let vid = video.video ?? video;
 
-                    if (!vid || !vid.thumbnailPath || !vid.name) {
+                    if (!vid || !vid.thumbnailPath || !vid.name)
+                    {
                         console.warn("Skipping invalid video entry:", vid);
                         return;
                     }
@@ -358,7 +375,8 @@
             }
 
             // suggested
-            async function lastWatched() {
+            async function lastWatched()
+            {
                 const response = await fetch(`${API_URL}/videos?sort=-views&count=100`);
                 const data = await response.json();
 
@@ -373,7 +391,8 @@
             window.lastWatched = lastWatched;
 
             // channels
-            async function loadChannels() {
+            async function loadChannels()
+            {
                 const response = await fetch(`${API_URL}/video-channels?count=100`);
                 const data = await response.json();
                 let channels = data.data;
@@ -401,7 +420,8 @@
                     div.onclick = () => loadChannelVideos(channel);
 
                     // Create thumbnail image if available
-                    if (channel.thumbnail) {
+                    if (channel.thumbnail)
+                    {
                         let img = document.createElement('img');
                         img.src = channel.thumbnail;
                         img.alt = `Thumbnail for ${channel.displayName}`;
@@ -413,7 +433,8 @@
             }
             window.loadChannels = loadChannels;
 
-            async function loadChannelVideos(channel) {
+            async function loadChannelVideos(channel)
+            {
                 let url = `${API_URL}/video-channels/${channel.name}/videos?count=100`;
                 const response = await fetch(url);
                 const data = await response.json();
@@ -428,7 +449,8 @@
             }
 
             // playlists
-            async function loadPlaylists() {
+            async function loadPlaylists()
+            {
                 const response = await fetch(`${API_URL}/video-playlists?count=100`);
                 const data = await response.json();
                 let playlists = data.data;
@@ -447,20 +469,22 @@
                     div.innerHTML = `${playlist.displayName}<br/>`;
                     div.onclick = () => loadPlaylistVideos(playlist);
 
-		    // Create thumbnail image if available
-		    if (playlist.thumbnail) {
-			    let img = document.createElement('img');
-			    img.src = playlist.thumbnail;
-			    img.alt = `Thumbnail for ${playlist.displayName}`;
-			    div.appendChild(img);
-		    }
+                    // Create thumbnail image if available
+                    if (playlist.thumbnail)
+                    {
+                        let img = document.createElement('img');
+                        img.src = playlist.thumbnail;
+                        img.alt = `Thumbnail for ${playlist.displayName}`;
+                        div.appendChild(img);
+                    }
 
                     listEl.prepend(div);
                 });
-            }
+        }
             window.loadPlaylists = loadPlaylists;
 
-            async function loadPlaylistVideos(playlist) {
+            async function loadPlaylistVideos(playlist)
+            {
                 let url = `${API_URL}/video-playlists/${playlist.id}/videos`;
                 const response = await fetch(url);
                 const data = await response.json();
@@ -475,20 +499,24 @@
             }
 
             // play video
-            function nextVideo() {
-                if (currentIndex < currentVideos.length - 1) {
+            function nextVideo()
+            {
+                if (currentIndex < currentVideos.length - 1)
+                {
                     currentIndex++;
                 } else {
                     currentIndex = 0;
-                }
+            }
                 video = currentVideos[currentIndex];
                 let vid = video.video ?? video;
                 playVideo(vid);
             }
             window.nextVideo = nextVideo;
 
-            function prevVideo() {
-                if (currentIndex > 0) {
+            function prevVideo()
+            {
+                if (currentIndex > 0)
+                {
                     currentIndex--;
                 } else {
                     currentIndex = currentVideos.length - 1;
@@ -499,12 +527,13 @@
             }
             window.prevVideo = prevVideo;
 
-            function playVideo(video) {
+            function playVideo(video)
+            {
                 clearPage();
 
                 currentIndex = currentVideos.findIndex(v => v.shortUUID === video.shortUUID);
-		        if (currentIndex == -1)
-			        currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
+                if (currentIndex == -1)
+                    currentIndex = currentVideos.findIndex(v => v.video.shortUUID === video.shortUUID);
 
                 const currViEl = document.getElementById('page-title');
                 currViEl.innerHTML = `<h4>${video.name}</h4>`;
@@ -541,7 +570,8 @@
         });
     </script>
     <script> // Stepping prev/next by arrow keys
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function()
+        {
             // Create a container div to log key events
             const logDiv = document.createElement('div');
             logDiv.id = 'log-container';
@@ -553,39 +583,45 @@
             logDiv.style.padding = '10px';
             logDiv.style.maxWidth = '300px';
             logDiv.style.overflowY = 'auto';
-            logDiv.style.zIndex = '1000';
+logDiv.style.zIndex = '1000';
             //document.body.appendChild(logDiv);
 
             // Function to append log messages to the logDiv
-            function logMessage(message) {
+            function logMessage(message)
+            {
                 const newMessage = document.createElement('p');
                 newMessage.textContent = message;
-                logDiv.prepend(newMessage);
+logDiv.prepend(newMessage);
 
                 // Optional: Auto-scroll to the latest message
                 logDiv.scrollTop = logDiv.scrollHeight;
             }
 
             // Detect keydown events for media keys (try using key instead of code)
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function(event)
+            {
                 const logText = `Key pressed: ${event.key}`;
                 logMessage(logText);  // Log the key to the log container
 
-                if (event.key === 'ArrowRight') {  // Right arrow or next
+                if (event.key === 'ArrowRight')  // Right arrow or next
+                {
                     nextVideo();
                 }
 
-                if (event.key === 'ArrowLeft') {  // Left arrow or prev
+                if (event.key === 'ArrowLeft')  // Left arrow or prev
+                {
                     prevVideo();
                 }
             });
         });
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function()
+        {
             let wakeLock = null;
 
-            async function requestWakeLock() {
+            async function requestWakeLock()
+            {
                 try {
                     wakeLock = await navigator.wakeLock.request("screen");
                     console.log("Screen Wake Lock is active");
