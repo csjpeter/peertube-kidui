@@ -17,6 +17,7 @@
     ">
     <title>Kid-Friendly PeerTube</title>
     <style>
+        // {{{
         html {
             display: flex;
             flex: 1;
@@ -259,10 +260,11 @@
             box-sizing: border-box;
             color: #666;
         }
+        // }}}
     </style>
     <script>
         // Function to toggle full-screen mode
-        function toggleFullScreen()
+        function toggleFullScreen() //{{{
         {
             if (!document.fullscreenElement &&    // If not in full-screen mode
                 !document.webkitFullscreenElement && // For Safari
@@ -307,11 +309,11 @@
                 // Update button text to show "Go Full Screen"
                 document.getElementById('fullscreenButton').textContent = '[&nbsp;&nbsp;]';
             }
-        }
+        } //}}}
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function()
+        function videoPlayer()
         {
             const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
             const KID_URL = `${window.location.protocol}//${window.location.hostname}/kidui`;
@@ -319,22 +321,22 @@
             let currentVideos = [];
             let currentIndex = 0;
 
-            function updateProgress()
+            function updateProgress() //{{{
             {
                 const indexEl = document.getElementById('current-index');
                 indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
-            }
+            } //}}}
 
-            function ellipseString(str, maxLength = 40)
+            function ellipseString(str, maxLength = 40) //{{{
             {
                 if (str.length <= maxLength)
                 {
                     return str;
                 }
                 return str.substring(0, maxLength - 3) + "...";
-            }
+            } //}}}
 
-            function clearPage()
+            function clearPage() //{{{
             {
                 document.getElementById('page-title').innerHTML = '';
                 document.getElementById('content-list').innerHTML = '';
@@ -345,9 +347,9 @@
                 embedEl.style.display = 'none';
                 const currDescEl = document.getElementById('video-description');
                 currDescEl.innerHTML = `<p></p>`;
-            }
+            } //}}}
 
-            function showVideoList(videos)
+            function showVideoList(videos) //{{{
             {
                 currentVideos = videos;
                 currentIndex = 0;
@@ -372,26 +374,10 @@
                     listEl.appendChild(div);
                 });
                 updateProgress();
-            }
-
-            // suggested
-            async function lastWatched()
-            {
-                const response = await fetch(`${API_URL}/videos?sort=-views&count=100`);
-                const data = await response.json();
-
-                clearPage();
-
-                const currChEl = document.getElementById('page-title');
-                currChEl.innerHTML = `<h1>Ajánlatok</h1>`;
-                currChEl.style.display = 'block';
-
-                showVideoList(data.data);
-            }
-            window.lastWatched = lastWatched;
+            } //}}}
 
             // channels
-            async function loadChannels()
+            async function loadChannels() //{{{
             {
                 const response = await fetch(`${API_URL}/video-channels?count=100`);
                 const data = await response.json();
@@ -430,10 +416,10 @@
 
                     listEl.appendChild(div);
                 });
-            }
+            } //}}}
             window.loadChannels = loadChannels;
 
-            async function loadChannelVideos(channel)
+            async function loadChannelVideos(channel) //{{{
             {
                 let url = `${API_URL}/video-channels/${channel.name}/videos?count=100`;
                 const response = await fetch(url);
@@ -446,10 +432,10 @@
                 currChEl.style.display = 'block';
 
                 showVideoList(data.data);
-            }
+            } //}}}
 
             // playlists
-            async function loadPlaylists()
+            async function loadPlaylists() //{{{
             {
                 const response = await fetch(`${API_URL}/video-playlists?count=100`);
                 const data = await response.json();
@@ -480,10 +466,10 @@
 
                     listEl.prepend(div);
                 });
-        }
+            } //}}}
             window.loadPlaylists = loadPlaylists;
 
-            async function loadPlaylistVideos(playlist)
+            async function loadPlaylistVideos(playlist) //{{{
             {
                 let url = `${API_URL}/video-playlists/${playlist.id}/videos`;
                 const response = await fetch(url);
@@ -496,24 +482,24 @@
                 currPlEl.style.display = 'block';
 
                 showVideoList(data.data);
-            }
+            } //}}}
 
             // play video
-            function nextVideo()
+            function nextVideo() //{{{
             {
                 if (currentIndex < currentVideos.length - 1)
                 {
                     currentIndex++;
                 } else {
                     currentIndex = 0;
-            }
+                }
                 video = currentVideos[currentIndex];
                 let vid = video.video ?? video;
                 playVideo(vid);
-            }
+            } //}}}
             window.nextVideo = nextVideo;
 
-            function prevVideo()
+            function prevVideo() //{{{
             {
                 if (currentIndex > 0)
                 {
@@ -524,10 +510,10 @@
                 video = currentVideos[currentIndex];
                 let vid = video.video ?? video;
                 playVideo(vid);
-            }
+            } //}}}
             window.prevVideo = prevVideo;
 
-            function playVideo(video)
+            function playVideo(video) //{{{
             {
                 clearPage();
 
@@ -564,59 +550,66 @@
 
                 const indexEl = document.getElementById('current-index');
                     indexEl.innerHTML = `<span>${currentIndex}/${currentVideos.length}</span>`;
-            }
+            } //}}}
 
-            lastWatched();
-        });
-    </script>
-    <script> // Stepping prev/next by arrow keys
-        document.addEventListener("DOMContentLoaded", function()
-        {
-            // Create a container div to log key events
-            const logDiv = document.createElement('div');
-            logDiv.id = 'log-container';
-            logDiv.style.position = 'fixed';
-            logDiv.style.top = '10px';
-            logDiv.style.left = '10px';
-            logDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-            logDiv.style.color = 'white';
-            logDiv.style.padding = '10px';
-            logDiv.style.maxWidth = '300px';
-            logDiv.style.overflowY = 'auto';
-logDiv.style.zIndex = '1000';
-            //document.body.appendChild(logDiv);
-
-            // Function to append log messages to the logDiv
-            function logMessage(message)
+            async function loadSuggestedVideos() //{{{
             {
-                const newMessage = document.createElement('p');
-                newMessage.textContent = message;
-logDiv.prepend(newMessage);
+                const response = await fetch(`${API_URL}/videos?sort=-views&count=100`);
+                const data = await response.json();
 
-                // Optional: Auto-scroll to the latest message
-                logDiv.scrollTop = logDiv.scrollHeight;
-            }
+                clearPage();
 
-            // Detect keydown events for media keys (try using key instead of code)
-            document.addEventListener('keydown', function(event)
-            {
-                const logText = `Key pressed: ${event.key}`;
-                logMessage(logText);  // Log the key to the log container
+                const currChEl = document.getElementById('page-title');
+                currChEl.innerHTML = `<h1>Ajánlatok</h1>`;
+                currChEl.style.display = 'block';
 
-                if (event.key === 'ArrowRight')  // Right arrow or next
-                {
-                    nextVideo();
-                }
-
-                if (event.key === 'ArrowLeft')  // Left arrow or prev
-                {
-                    prevVideo();
-                }
-            });
-        });
+                showVideoList(data.data);
+            } //}}}
+            loadSuggestedVideos();
+        }
+        document.addEventListener("DOMContentLoaded", videoPlayer);
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function()
+        function createKeyPressLogDiv() //{{{
+            {
+                // Create a container div to log key events
+                const logDiv = document.createElement('div');
+                logDiv.id = 'key-press-log-container';
+                logDiv.style.position = 'fixed';
+                logDiv.style.top = '10px';
+                logDiv.style.left = '10px';
+                logDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                logDiv.style.color = 'white';
+                logDiv.style.padding = '10px';
+                logDiv.style.maxWidth = '300px';
+                logDiv.style.overflowY = 'auto';
+                logDiv.style.zIndex = '1000';
+                document.body.appendChild(logDiv);
+
+                // Function to append log messages to the logDiv
+                function logKeyPress(message)
+                {
+                    const newMessage = document.createElement('p');
+                    newMessage.textContent = message;
+                    // find key-press-log-container element
+                    //const logDiv = document.getElementById('key-press-log-container');
+                    logDiv.prepend(newMessage);
+                    // Optional: Auto-scroll to the latest message
+                    logDiv.scrollTop = logDiv.scrollHeight;
+                }
+
+                function keyDownEvent()
+                {
+                    const logText = `Key pressed: ${event.key}`;
+                    logKeyPress(logText);  // Log the key to the log container
+                }
+
+                // Detect keydown events for media keys (try using key instead of code)
+                document.addEventListener('keydown', keyDownEvent);
+            } //}}}
+        //document.addEventListener("DOMContentLoaded", createKeyPressLogDiv);
+
+        function wakeLocker() //{{{
         {
             let wakeLock = null;
 
@@ -639,8 +632,9 @@ logDiv.prepend(newMessage);
 
             setInterval(() => {
                 window.dispatchEvent(new Event("mousemove"));
-            }, 50000);            
-        });
+            }, 50000);
+        } //}}}
+        document.addEventListener("DOMContentLoaded", wakeLocker);
     </script>
 </head>
 <body>
