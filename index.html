@@ -272,6 +272,7 @@
             let currentVideos = [];
             let currentIndex = 0;
             let startingNextVideo = false;
+            let repeatCurrentVideoFlag = false;
 
             function updateIndex() //{{{
             {
@@ -437,6 +438,13 @@
                 showVideoList(data.data);
             } //}}}
 
+            function repeatCurrentVideo() //{{{
+            {
+                video = currentVideos[currentIndex];
+                let vid = video.video ?? video;
+                playVideo(vid);
+            } //}}}
+
             function nextVideo() //{{{
             {
                 if (currentIndex < currentVideos.length - 1)
@@ -499,11 +507,35 @@
                 startingNextVideo = false;
             } //}}}
 
+            function toggleRepeatCurrentVideo() //{{{
+            {
+                repeatCurrentVideoFlag = !repeatCurrentVideoFlag;
+                const btnEl = document.getElementById('btn_repeat');
+                if (repeatCurrentVideoFlag == true)
+                {
+                    btnEl.style.backgroundColor = '#d0ddd0';
+                    btnEl.style.color = '#000';
+                } else
+                {
+                    btnEl.style.backgroundColor = '#f0f0f0';
+                    btnEl.style.color = '#555';
+                }
+                console.log("Repeat current video: " + repeatCurrentVideoFlag);
+            } //}}}
+            window.toggleRepeatCurrentVideo = toggleRepeatCurrentVideo;
+
             function videoEndedHandler() //{{{
             {
-                if (startingNextVideo == false)
+                if (startingNextVideo == true)
+                    return;
+
+                console.log("Video "+currentIndex+" ended");
+
+                if (repeatCurrentVideoFlag == true)
                 {
-                    console.log("Video "+currentIndex+" ended");
+                    repeatCurrentVideo();
+                } else
+                {
                     nextVideo();
                 }
             } //}}}
@@ -656,6 +688,7 @@
                 en: {
                     btn_fullscreen_top   : "Fullscreen",
                     btn_channels_top     : "Channels",
+                    btn_repeat           : "Repeats",
                     btn_playlists_top    : "Playlists",
                     btn_prev_top         : "Previous",
                     btn_next_top         : "Next",
@@ -668,6 +701,7 @@
                 hu: {
                     btn_fullscreen_top   : "Teljes képernyő",
                     btn_channels_top     : "Csatornák",
+                    btn_repeat           : "Ismétel",
                     btn_playlists_top    : "Lejátszási listák",
                     btn_prev_top         : "Előző",
                     btn_next_top         : "Következő",
@@ -701,7 +735,8 @@
         <div id="top-bar">
             <button id="btn_fullscreen_top" onclick="toggleFullScreen()">[&nbsp;&nbsp;]</button>
             <button id="btn_channels_top"   onclick="loadChannels()">Csat.</button>
-            <button id="btn_playlists_top"  onclick="loadPlaylists()">Listák</button>
+            <button id="btn_repeat"         onclick="toggleRepeatCurrentVideo()">Ismétel</button>
+            <!--<button id="btn_playlists_top"  onclick="loadPlaylists()">Listák</button>-->
             <button id="btn_prev_top"       onclick="prevVideo()">Előző</button>
             <button id="btn_next_top"       onclick="nextVideo()">Köv.</button>
             <span class="current-index"></span>
@@ -721,7 +756,8 @@
             <div id="right-bar">
                 <button id="btn_fullscreen_right" onclick="toggleFullScreen()"</button>
                 <button id="btn_channels_right"   onclick="loadChannels()">Csat.</button>
-                <button id="btn_playlists_right"  onclick="loadPlaylists()">Listák</button>
+                <button id="btn_repeat"           onclick="toggleRepeatCurrentVideo()">Ismétel</button>
+                <!--<button id="btn_playlists_right"  onclick="loadPlaylists()">Listák</button>-->
                 <button id="btn_prev_right"       onclick="prevVideo()">Előző</button>
                 <button id="btn_next_right"       onclick="nextVideo()">Köv.</button>
                 <span class="current-index"></span>
