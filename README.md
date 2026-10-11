@@ -59,3 +59,7 @@ insert this:
 
 You can also find my full nginx config file, which has more adjustments
 for my private needs.
+
+## Licence
+
+GPL-3.0-only. See the `LICENSE` file.

@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025 Peter Csaszar (Császár Péter)
+# Created: 2025-05-12
+# Example nginx site configuration for PeerTube and the kidui frontend.
 # Minimum Nginx version required:  1.13.0 (released Apr 25, 2017)
 # Please check your Nginx installation features the following modules via 'nginx -V':
 # STANDARD HTTP MODULES: Core, Proxy, Rewrite, Access, Gzip, Headers, HTTP/2, Log, Real IP, SSL, Thread Pool, Upstream, AIO Multithreading.

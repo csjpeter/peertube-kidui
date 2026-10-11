@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025 Peter Csaszar (Császár Péter)
+# Created: 2025-05-12
+# Example PeerTube production configuration of the family instance.
 listen:
   hostname: '0.0.0.0'
   port: 9000
