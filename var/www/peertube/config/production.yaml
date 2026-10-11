@@ -109,14 +109,14 @@ smtp:
   transport: smtp
   # Path to sendmail command. Required if you use sendmail transport
   sendmail: null
-  hostname: smtp.csaszar.email
+  hostname: mail.example.org
   port: 587 #465 # If you use StartTLS: 587
   username: peertube
   password: '_->"ooN\<z@1F,#ZndH8'
   tls: true # If you use StartTLS: false
   disable_starttls: false
   ca_file: null # Used for self signed certificates
-  from_address: 'peertube@csaszar.email'
+  from_address: 'peertube@example.org'
 
 email:
   body:
@@ -561,7 +561,7 @@ cache:
 admin:
   # Used to generate the root user at first startup
   # And to receive emails from the contact form
-  email: 'peter@csaszar.email'
+  email: 'admin@example.org'
 
 contact_form:
   enabled: true
