@@ -2,32 +2,7 @@
 /* Copyright (c) 2026 Peter Csaszar (Császár Péter) */
 /* Created: 2026-10-12 */
 /* E2E test of auto-advance and repeat mode: seeks the embedded video to its end in a real browser. */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <browsertest.h>
-
-static int failures;
-
-static void report(const char *name, int ok, const char *detail)
-{
-    if (ok) {
-        printf("ok: %s\n", name);
-    } else {
-        fprintf(stderr, "FAIL: %s: %s\n", name, detail);
-        failures++;
-    }
-}
-
-/* Waits for the selector; on failure prints the library's reason. */
-static int wait_for(bt_browser *b, const char *selector, int ms)
-{
-    int rc = bt_wait_for(b, selector, BT_WAIT_PRESENT, ms);
-    if (rc != 0) {
-        fprintf(stderr, "  wait %s: %s\n", selector, bt_error(b));
-    }
-    return rc == 0;
-}
+#include "kidui-e2e.h"
 
 /* Waits (in the page) until the embedded <video> has metadata, seeks it to just before
  * its end, counts its ended events in window.__ended and plays it muted. */
@@ -49,12 +24,6 @@ static const char *SEEK_NEAR_END =
     "  try { await v.play(); } catch (e) { return 'play-failed: ' + e; }"
     "  return 'seeked';"
     "})()";
-
-static char *page_text(bt_browser *b, const char *selector)
-{
-    char *t = bt_text(b, selector);
-    return t ? t : strdup("");
-}
 
 static int start_first_video(bt_browser *b, const char *base, const char *embed1)
 {
@@ -97,6 +66,7 @@ int main(void)
         fprintf(stderr, "autoadvance: cannot start the browser: %s\n", err);
         return 3;
     }
+    coverage_begin(b);
     if (!start_first_video(b, base, embed1)) {
         report("auto-advance: first video starts", 0, bt_error(b));
     } else {
@@ -111,6 +81,7 @@ int main(void)
         report("auto-advance: the index is 2/2", strcmp(idx, "2/2") == 0, idx);
         free(idx);
     }
+    coverage_end(b, "autoadvance");
     bt_close(b);
 
     /* Repeat mode: at the end of video 1 the same video stays, the index stays 1/2. */
@@ -119,6 +90,7 @@ int main(void)
         fprintf(stderr, "autoadvance: cannot start the browser: %s\n", err);
         return 3;
     }
+    coverage_begin(b);
     if (!start_first_video(b, base, embed1) || bt_click(b, "#btn_repeat") != 0) {
         report("repeat: first video starts and repeat is on", 0, bt_error(b));
     } else {
@@ -147,6 +119,7 @@ int main(void)
         report("repeat: the index is still 1/2", strcmp(idx, "1/2") == 0, idx);
         free(idx);
     }
+    coverage_end(b, "autoadvance");
     bt_close(b);
 
     return failures ? 1 : 0;

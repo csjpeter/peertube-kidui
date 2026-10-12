@@ -277,7 +277,6 @@
             const API_URL = `${window.location.origin}/api/v1`;
             let currentVideos = [];
             let currentIndex = 0;
-            let startingNextVideo = false;
             let repeatCurrentVideoFlag = false;
 
             function updateIndex() //{{{
@@ -523,7 +522,6 @@
 
             function playVideo(video) //{{{
             {
-                startingNextVideo = true;
                 try {
                     clearPage();
 
@@ -552,7 +550,6 @@
                 } catch (e) {
                     console.error("Error playing video:", e);
                 }
-                startingNextVideo = false;
             } //}}}
 
             function toggleRepeatCurrentVideo() //{{{
@@ -574,9 +571,6 @@
 
             function videoEndedHandler() //{{{
             {
-                if (startingNextVideo == true)
-                    return;
-
                 console.log("Video "+currentIndex+" ended");
 
                 if (repeatCurrentVideoFlag == true)

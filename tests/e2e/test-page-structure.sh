@@ -9,10 +9,12 @@ set -eu
 base="${KIDUI_BASE_URL:?KIDUI_BASE_URL is required}"
 status=0
 
+n=0
 check() {
 	name="$1"
 	shift
-	if browser-drive --timeout 15000 --url "$base/" "$@"; then
+	n=$((n + 1))
+	if browser-drive --timeout 15000 ${KIDUI_COVERAGE_DIR:+--coverage "$KIDUI_COVERAGE_DIR/structure-$n.json"} --url "$base/" "$@"; then
 		echo "ok: $name"
 	else
 		echo "FAIL: $name" >&2
