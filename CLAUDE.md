@@ -44,6 +44,17 @@ All URLs are constructed dynamically from `window.location.protocol` and `window
 
 Functions use vim fold markers (`//{{{` … `//}}}`) for collapsing in editors that support them. Keep this convention when adding new functions.
 
+## Commands
+
+```bash
+./manage.sh check        # private-domain check, node unit tests, E2E self-test of the test verbs
+./manage.sh test-setup   # verifies browser-drive (libbrowsertest) and a system Chromium; no registry
+./manage.sh test         # runs tests/e2e/test-*.sh against $KIDUI_BASE_URL (default http://localhost:9000/kidui)
+```
+
+E2E tests drive a real headless Chromium through `browser-drive` from the workspace's own
+libbrowsertest; Playwright and npm are not used.
+
 ## Configuration files (examples, not the live server)
 
 - `var/www/peertube/config/production.yaml` — example PeerTube config (family instance: Hungarian, no federation, HLS only, P2P disabled).
