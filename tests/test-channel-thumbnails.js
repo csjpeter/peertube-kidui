@@ -53,7 +53,7 @@ async function renderChannels(channels, videosByChannel) {
         if (r === 'http500') { return { ok: false, json: async () => ({}) }; }
         return { ok: true, json: async () => ({ data: r }) };
     };
-    const window = { location: { protocol: 'http:', hostname: 'host.example.org' } };
+    const window = { location: { origin: 'http://host.example.org' } };
     new Function('window', 'document', 'fetch', 'console',
         `${player}\n videoPlayer();`)(window, document, fetch, console);
     await window.loadChannels();
