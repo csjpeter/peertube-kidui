@@ -312,19 +312,23 @@
 
             function showVideoList(videos) //{{{
             {
-                currentVideos = videos;
+                // Entries without a name or a thumbnail are not shown, so they are not counted either.
+                const valid = videos.filter(video => {
+                    const vid = video?.video ?? video;
+                    if (!vid || !vid.thumbnailPath || !vid.name)
+                    {
+                        console.warn("Skipping invalid video entry:", vid);
+                        return false;
+                    }
+                    return true;
+                });
+                currentVideos = valid;
                 currentIndex = 0;
 
                 const listEl = document.getElementById('content-list');
                 listEl.style.display = 'flex';
-                videos.forEach(video => {
+                valid.forEach(video => {
                     let vid = video.video ?? video;
-
-                    if (!vid || !vid.thumbnailPath || !vid.name)
-                    {
-                        console.warn("Skipping invalid video entry:", vid);
-                        return;
-                    }
 
                     let div = document.createElement('div');
                     div.classList.add('video-item');
