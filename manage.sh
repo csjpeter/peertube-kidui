@@ -22,9 +22,16 @@ check_private_domain() {
 	echo "check: private domain: ok"
 }
 
+check_js_tests() {
+	for t in tests/test-*.js; do
+		node "$t" || return 1
+	done
+}
+
 case "${1:-}" in
 check)
 	check_private_domain
+	check_js_tests
 	;;
 *)
 	echo "usage: $0 check" >&2
