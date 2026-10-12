@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Peter Csaszar (Császár Péter)
 # Created: 2026-10-11
-# Project management script: check, fixtures, test-setup, test and the local PeerTube instance.
+# Project management script: check, fixtures, test-setup, test, coverage and the local PeerTube instance.
 
 set -eu
 
@@ -28,6 +28,7 @@ check_js_tests() {
 	done
 	sh tests/test-manage-fixtures.sh
 	sh tests/test-manage-e2e.sh
+	sh tests/test-coverage-report.sh
 }
 
 # Pinned by digest; the owner approves these on the ticket KIDUI-9 before any pull.
@@ -79,7 +80,9 @@ peertube_up() {
 		-v "$PWD/$PT_DATA/data:/data:Z" "$PEERTUBE_IMAGE"
 }
 
-# Uploads the two fixture videos, each to its own channel, through the API of the local instance.
+# Seeds the local instance through its API: a second channel, one video in each of the
+# two channels (the second with a name longer than the page shows and a description) and a
+# public playlist of both. Steps already done are skipped, so it can run again.
 peertube_seed() {
 	command -v jq >/dev/null || { echo "peertube-seed: jq is not installed" >&2; return 1; }
 	[ -s build/fixtures/video1.mp4 ] || make_fixtures || return 1
@@ -92,21 +95,42 @@ peertube_seed() {
 		--data-urlencode username=root --data-urlencode password=kidui-test-password \
 		"$base/api/v1/users/token" | jq -r .access_token)" || return 1
 	auth="Authorization: Bearer $token"
-	curl -fsS -H "$auth" -H 'Content-Type: application/json' \
-		-d '{"name":"cartoons","displayName":"Cartoons"}' \
-		"$base/api/v1/video-channels" >/dev/null || return 1
+	code="$(curl -sS -o /dev/null -w '%{http_code}' "$base/api/v1/video-channels/cartoons")" || return 1
+	if [ "$code" = "404" ]; then
+		curl -fsS -H "$auth" -H 'Content-Type: application/json' \
+			-d '{"name":"cartoons","displayName":"Cartoons"}' \
+			"$base/api/v1/video-channels" >/dev/null || return 1
+	fi
 	i=1
 	for channel in root_channel cartoons; do
-		cid="$(curl -fsS "$base/api/v1/video-channels/$channel" | jq -r .id)" || return 1
-		curl -fsS -H "$auth" \
-			-F channelId="$cid" -F name="Test video $i" -F privacy=1 \
-			-F videofile=@"build/fixtures/video$i.mp4" \
-			-F thumbnailfile=@"build/fixtures/video$i.jpg" \
-			-F previewfile=@"build/fixtures/video$i.jpg" \
-			"$base/api/v1/videos/upload" >/dev/null || return 1
+		have="$(curl -fsS "$base/api/v1/video-channels/$channel/videos" | jq -r .total)" || return 1
+		if [ "$have" = "0" ]; then
+			cid="$(curl -fsS "$base/api/v1/video-channels/$channel" | jq -r .id)" || return 1
+			name="Test video $i"
+			if [ "$i" = "2" ]; then
+				name="Test video 2 with a title much longer than the page lists"
+			fi
+			curl -fsS -H "$auth" \
+				-F channelId="$cid" -F name="$name" -F privacy=1 \
+				-F description="Description of test video $i" \
+				-F videofile=@"build/fixtures/video$i.mp4" \
+				-F thumbnailfile=@"build/fixtures/video$i.jpg" \
+				-F previewfile=@"build/fixtures/video$i.jpg" \
+				"$base/api/v1/videos/upload" >/dev/null || return 1
+		fi
 		i=$((i + 1))
 	done
-	echo "peertube-seed: uploaded 2 videos to root_channel and cartoons"
+	lists="$(curl -fsS "$base/api/v1/video-playlists" | jq -r .total)" || return 1
+	if [ "$lists" = "0" ]; then
+		cid="$(curl -fsS "$base/api/v1/video-channels/root_channel" | jq -r .id)" || return 1
+		pid="$(curl -fsS -H "$auth" -F displayName="Test playlist" -F privacy=1 \
+			-F videoChannelId="$cid" "$base/api/v1/video-playlists" | jq -r .videoPlaylist.id)" || return 1
+		for vid in $(curl -fsS "$base/api/v1/videos?sort=createdAt&count=100" | jq -r '.data[].id'); do
+			curl -fsS -H "$auth" -H 'Content-Type: application/json' -d "{\"videoId\":$vid}" \
+				"$base/api/v1/video-playlists/$pid/videos" >/dev/null || return 1
+		done
+	fi
+	echo "peertube-seed: root_channel and cartoons hold one video each, plus a playlist of both"
 }
 
 peertube_down() {
@@ -185,6 +209,17 @@ run_e2e() {
 	return "$failed"
 }
 
+# Runs the E2E suite with the JavaScript coverage collected and requires every line
+# of the <script> blocks of index.html to have run (tests/support/coverage-report.sh).
+run_coverage() {
+	rm -rf build/coverage
+	mkdir -p build/coverage
+	KIDUI_COVERAGE_DIR="$PWD/build/coverage"
+	export KIDUI_COVERAGE_DIR
+	run_e2e || return 1
+	sh tests/support/coverage-report.sh index.html build/coverage
+}
+
 case "${1:-}" in
 fixtures)
 	make_fixtures
@@ -204,12 +239,15 @@ test-setup)
 test)
 	run_e2e
 	;;
+coverage)
+	run_coverage
+	;;
 check)
 	check_private_domain
 	check_js_tests
 	;;
 *)
-	echo "usage: $0 check|fixtures|peertube-up|peertube-down|peertube-seed|test-setup|test" >&2
+	echo "usage: $0 check|fixtures|peertube-up|peertube-down|peertube-seed|test-setup|test|coverage" >&2
 	exit 2
 	;;
 esac

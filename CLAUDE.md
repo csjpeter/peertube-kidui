@@ -51,10 +51,13 @@ Functions use vim fold markers (`//{{{` … `//}}}`) for collapsing in editors t
 ./manage.sh fixtures       # two test videos + thumbnails by ffmpeg, into build/fixtures
 ./manage.sh peertube-up    # rootless podman: PeerTube, PostgreSQL, Redis by digest, 127.0.0.1:9000
                            # (needs KIDUI_DIGESTS_APPROVED=KIDUI-9: the images are pulled)
-./manage.sh peertube-seed  # uploads the fixtures to root_channel and cartoons
+./manage.sh peertube-seed  # one video in root_channel and in cartoons, and a playlist of both
 ./manage.sh test-setup     # verifies browser-drive (libbrowsertest) and a system Chromium
 ./manage.sh test           # tests/e2e/test-*.sh; through tests/support/kidui-proxy.py
                            # unless KIDUI_BASE_URL names an instance
+./manage.sh coverage       # runs the E2E suite with JavaScript coverage (browser-drive --coverage,
+                           # bt_coverage_*); build/coverage/report.{json,html}; fails below 100%
+                           # of the lines of the <script> blocks of index.html
 ./manage.sh peertube-down  # removes the containers and the network (data stays in build/peertube)
 ```
 

@@ -15,10 +15,12 @@ embed1="$(curl -fsS "$api/api/v1/videos?sort=-views&count=100" | jq -r '.data[0]
 embed2="$(curl -fsS "$api/api/v1/videos?sort=-views&count=100" | jq -r '.data[1].embedPath')"
 
 # check NAME OPERATION...: runs browser-drive from a fresh page load of the app.
+n=0
 check() {
 	name="$1"
 	shift
-	if browser-drive --timeout 20000 --url "$base/" "$@"; then
+	n=$((n + 1))
+	if browser-drive --timeout 20000 ${KIDUI_COVERAGE_DIR:+--coverage "$KIDUI_COVERAGE_DIR/capabilities-$n.json"} --url "$base/" "$@"; then
 		echo "ok: $name"
 	else
 		echo "FAIL: $name" >&2
@@ -58,6 +60,19 @@ check "next and previous move the index and reload the embed" \
 	--wait "#embed-player[src^=\"$embed2\"]" \
 	--click '#btn_prev_top' --expect-text '#top-bar .current-index=1/2' \
 	--wait "#embed-player[src^=\"$embed1\"]"
+
+check "next from the last video wraps to the first" \
+	--wait '#content-list .video-item' --click '#content-list .video-item' \
+	--wait "#embed-player[src^=\"$embed1\"]" \
+	--click '#btn_next_top' --expect-text '#top-bar .current-index=2/2' \
+	--click '#btn_next_top' --expect-text '#top-bar .current-index=1/2' \
+	--wait "#embed-player[src^=\"$embed1\"]"
+
+check "previous from the first video wraps to the last" \
+	--wait '#content-list .video-item' --click '#content-list .video-item' \
+	--wait "#embed-player[src^=\"$embed1\"]" \
+	--click '#btn_prev_top' --expect-text '#top-bar .current-index=2/2' \
+	--wait "#embed-player[src^=\"$embed2\"]"
 
 check "the repeat button toggles its look" \
 	--click '#btn_repeat' --wait '#btn_repeat[style*="208, 221, 208"]' \
