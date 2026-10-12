@@ -591,10 +591,31 @@
             function embedPlayerLoadEventHander() //{{{
             {
                 const iframe = document.getElementById('embed-player');
-                const video = iframe.contentDocument.querySelector('video');
-                if (video === null)
+                const doc = iframe.contentDocument;
+                if (!doc || !doc.documentElement)
                     return;
-                video.addEventListener('ended', videoEndedHandler);
+
+                // The embed page creates its <video> element after its load event,
+                // so wait for it to appear instead of looking once.
+                let attached = false;
+                const attach = () => {
+                    const video = doc.querySelector('video');
+                    if (video === null)
+                        return false;
+                    if (!attached)
+                    {
+                        attached = true;
+                        video.addEventListener('ended', videoEndedHandler);
+                    }
+                    return true;
+                };
+                if (attach())
+                    return;
+                const observer = new MutationObserver(() => {
+                    if (attach())
+                        observer.disconnect();
+                });
+                observer.observe(doc.documentElement, { childList: true, subtree: true });
             } //}}}
 
             const embedPlayer = document.getElementById('embed-player');
