@@ -38,7 +38,7 @@ Everything lives in `index.html`. The JavaScript is split into four `<script>` b
 | `GET /api/v1/video-playlists/{id}/videos` | playlist videos |
 | `GET /api/v1/videos?sort=-views&count=100` | suggested videos (default view) |
 
-All URLs are constructed dynamically from `window.location.protocol` and `window.location.hostname`, so no hardcoded server address appears in the app.
+All URLs are constructed dynamically from `window.location.origin`, so no hardcoded server address appears in the app.
 
 ### Code style
 
@@ -47,13 +47,20 @@ Functions use vim fold markers (`//{{{` … `//}}}`) for collapsing in editors t
 ## Commands
 
 ```bash
-./manage.sh check        # private-domain check, node unit tests, E2E self-test of the test verbs
-./manage.sh test-setup   # verifies browser-drive (libbrowsertest) and a system Chromium; no registry
-./manage.sh test         # runs tests/e2e/test-*.sh against $KIDUI_BASE_URL (default http://localhost:9000/kidui)
+./manage.sh check          # private-domain check, node unit tests, self-tests of the verbs
+./manage.sh fixtures       # two test videos + thumbnails by ffmpeg, into build/fixtures
+./manage.sh peertube-up    # rootless podman: PeerTube, PostgreSQL, Redis by digest, 127.0.0.1:9000
+                           # (needs KIDUI_DIGESTS_APPROVED=KIDUI-9: the images are pulled)
+./manage.sh peertube-seed  # uploads the fixtures to root_channel and cartoons
+./manage.sh test-setup     # verifies browser-drive (libbrowsertest) and a system Chromium
+./manage.sh test           # tests/e2e/test-*.sh; through tests/support/kidui-proxy.py
+                           # unless KIDUI_BASE_URL names an instance
+./manage.sh peertube-down  # removes the containers and the network (data stays in build/peertube)
 ```
 
 E2E tests drive a real headless Chromium through `browser-drive` from the workspace's own
-libbrowsertest; Playwright and npm are not used.
+libbrowsertest; Playwright and npm are not used. The page builds its URLs from
+`window.location.origin`, so it works on any port.
 
 ## Configuration files (examples, not the live server)
 

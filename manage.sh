@@ -75,8 +75,38 @@ peertube_up() {
 		-e PEERTUBE_DB_PASSWORD=peertube -e PEERTUBE_REDIS_HOSTNAME=kidui-redis \
 		-e PEERTUBE_WEBSERVER_HOSTNAME=localhost -e PEERTUBE_WEBSERVER_PORT="$PT_PORT" \
 		-e PEERTUBE_WEBSERVER_HTTPS=false -e PEERTUBE_SECRET=0000000000000000000000000000000000000000000000000000000000000000 \
-		-e PT_INITIAL_ROOT_PASSWORD=kidui-test-password \
+		-e PT_INITIAL_ROOT_PASSWORD=kidui-test-password -e PEERTUBE_ADMIN_EMAIL=admin@example.org \
 		-v "$PWD/$PT_DATA/data:/data:Z" "$PEERTUBE_IMAGE"
+}
+
+# Uploads the two fixture videos, each to its own channel, through the API of the local instance.
+peertube_seed() {
+	command -v jq >/dev/null || { echo "peertube-seed: jq is not installed" >&2; return 1; }
+	[ -s build/fixtures/video1.mp4 ] || make_fixtures || return 1
+	base="http://localhost:$PT_PORT"
+	client="$(curl -fsS "$base/api/v1/oauth-clients/local")" || return 1
+	token="$(curl -fsS \
+		-d "client_id=$(printf '%s' "$client" | jq -r .client_id)" \
+		-d "client_secret=$(printf '%s' "$client" | jq -r .client_secret)" \
+		-d grant_type=password -d response_type=code \
+		--data-urlencode username=root --data-urlencode password=kidui-test-password \
+		"$base/api/v1/users/token" | jq -r .access_token)" || return 1
+	auth="Authorization: Bearer $token"
+	curl -fsS -H "$auth" -H 'Content-Type: application/json' \
+		-d '{"name":"cartoons","displayName":"Cartoons"}' \
+		"$base/api/v1/video-channels" >/dev/null || return 1
+	i=1
+	for channel in root_channel cartoons; do
+		cid="$(curl -fsS "$base/api/v1/video-channels/$channel" | jq -r .id)" || return 1
+		curl -fsS -H "$auth" \
+			-F channelId="$cid" -F name="Test video $i" -F privacy=1 \
+			-F videofile=@"build/fixtures/video$i.mp4" \
+			-F thumbnailfile=@"build/fixtures/video$i.jpg" \
+			-F previewfile=@"build/fixtures/video$i.jpg" \
+			"$base/api/v1/videos/upload" >/dev/null || return 1
+		i=$((i + 1))
+	done
+	echo "peertube-seed: uploaded 2 videos to root_channel and cartoons"
 }
 
 peertube_down() {
@@ -89,7 +119,10 @@ peertube_down() {
 }
 
 
-E2E_BASE_URL="${KIDUI_BASE_URL:-http://localhost:9000/kidui}"
+# Without KIDUI_BASE_URL, test starts tests/support/kidui-proxy.py in front of the
+# local PeerTube (peertube-up) and tests through it.
+E2E_PROXY_PORT="8089"
+E2E_BASE_URL="${KIDUI_BASE_URL:-http://127.0.0.1:$E2E_PROXY_PORT/kidui}"
 
 # The E2E tools are the workspace's own libbrowsertest (browser-drive) and a system
 # Chromium: nothing is fetched from a registry.
@@ -115,16 +148,31 @@ test_setup() {
 	return "$missing"
 }
 
-# Runs every tests/e2e/test-*.sh against the live instance at KIDUI_BASE_URL.
+# Runs every tests/e2e/test-*.sh against the instance at KIDUI_BASE_URL.
 run_e2e() {
 	test_setup || return 1
+	if [ -z "${KIDUI_BASE_URL:-}" ]; then
+		if ! curl -fsS -o /dev/null "http://localhost:$PT_PORT/api/v1/config"; then
+			echo "test: no PeerTube on port $PT_PORT; run ./manage.sh peertube-up and peertube-seed, or set KIDUI_BASE_URL" >&2
+			return 1
+		fi
+		python3 -I tests/support/kidui-proxy.py "$E2E_PROXY_PORT" "$PT_PORT" 2>build/tmp/proxy.log &
+		proxy_pid=$!
+		trap 'kill "$proxy_pid"' EXIT
+		i=0
+		until curl -fsS -o /dev/null "$E2E_BASE_URL/"; do
+			i=$((i + 1))
+			if [ "$i" -gt 50 ]; then echo "test: proxy did not start; see build/tmp/proxy.log" >&2; return 1; fi
+			sleep 0.1
+		done
+	fi
 	if ! curl -fsS -o /dev/null "$E2E_BASE_URL/"; then
 		echo "test: $E2E_BASE_URL is not reachable; start the instance or set KIDUI_BASE_URL" >&2
 		return 1
 	fi
 	failed=0
 	found=0
-	for t in tests/e2e/test-*.sh; do
+	for t in ${KIDUI_E2E_TESTS:-tests/e2e/test-*.sh}; do
 		[ -e "$t" ] || continue
 		found=1
 		echo "== $t"
@@ -147,6 +195,9 @@ peertube-up)
 peertube-down)
 	peertube_down
 	;;
+peertube-seed)
+	peertube_seed
+	;;
 test-setup)
 	test_setup
 	;;
@@ -158,7 +209,7 @@ check)
 	check_js_tests
 	;;
 *)
-	echo "usage: $0 check|fixtures|peertube-up|peertube-down|test-setup|test" >&2
+	echo "usage: $0 check|fixtures|peertube-up|peertube-down|peertube-seed|test-setup|test" >&2
 	exit 2
 	;;
 esac

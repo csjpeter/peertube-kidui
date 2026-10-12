@@ -12,6 +12,7 @@ status=0
 ./manage.sh test-setup || { echo "FAIL: test-setup" >&2; exit 1; }
 echo "ok: test-setup"
 
+# Only the page-structure test runs here: the others need a seeded PeerTube.
 # Serve this checkout under /kidui, as nginx does, on a free loopback port.
 site="build/e2e-site-$$"
 mkdir -p "$site"
@@ -32,7 +33,7 @@ until curl -fsS -o /dev/null "http://127.0.0.1:$port/kidui/"; do
 	sleep 0.1
 done
 
-if KIDUI_BASE_URL="http://127.0.0.1:$port/kidui" ./manage.sh test; then
+if KIDUI_E2E_TESTS="tests/e2e/test-page-structure.sh" KIDUI_BASE_URL="http://127.0.0.1:$port/kidui" ./manage.sh test; then
 	echo "ok: manage.sh test passes against a served page"
 else
 	echo "FAIL: manage.sh test failed against a served page" >&2
