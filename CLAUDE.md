@@ -33,6 +33,7 @@ Everything lives in `index.html`. The JavaScript is split into four `<script>` b
 |---|---|
 | `GET /api/v1/video-channels?count=100` | list channels |
 | `GET /api/v1/video-channels/{name}/videos?count=100` | channel videos |
+| `GET /api/v1/video-channels/{name}/videos?count=1&sort=-publishedAt` | latest video of a channel: its thumbnail is the channel card image (ADR-001) |
 | `GET /api/v1/video-playlists?count=100` | list playlists |
 | `GET /api/v1/video-playlists/{id}/videos` | playlist videos |
 | `GET /api/v1/videos?sort=-views&count=100` | suggested videos (default view) |

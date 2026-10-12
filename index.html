@@ -183,6 +183,8 @@
 
         .video-item img {
             width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
             padding: 0ex;
             margin: 0ex;
         }
@@ -336,6 +338,31 @@
                 updateIndex();
             } //}}}
 
+            const CHANNEL_PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9">' +
+                '<rect width="16" height="9" fill="#ddd"/>' +
+                '<polygon points="6.5,2.5 6.5,6.5 10,4.5" fill="#999"/></svg>');
+
+            function channelAvatarPath(channel) //{{{
+            {
+                // PeerTube >= 6 lists avatars[]; older versions have a single avatar object.
+                const avatar = (channel.avatars && channel.avatars[0]) || channel.avatar;
+                return (avatar && avatar.path) || null;
+            } //}}}
+
+            async function fetchChannelThumbnailPath(channel) //{{{
+            {
+                const url = `${API_URL}/video-channels/${encodeURIComponent(channel.name)}/videos?count=1&sort=-publishedAt`;
+                const response = await fetch(url);
+                if (!response.ok)
+                {
+                    return null;
+                }
+                const data = await response.json();
+                const first = data.data && data.data[0];
+                return (first && first.thumbnailPath) || null;
+            } //}}}
+
             async function loadChannels() //{{{
             {
                 const response = await fetch(`${API_URL}/video-channels?count=100`);
@@ -358,20 +385,37 @@
                     return nameA.localeCompare(nameB);
                 });
 
-                channels.forEach(channel => {
+                // One request per channel, concurrently; a failed one never breaks the list (ADR-001).
+                const latestThumbnails = await Promise.all(
+                    channels.map(channel => fetchChannelThumbnailPath(channel).catch(() => null)));
+
+                channels.forEach((channel, i) => {
                     let div = document.createElement('div');
-                    div.classList.add('list-item');
-                    div.innerHTML = `${channel.displayName}`;
+                    div.classList.add('video-item');
                     div.onclick = () => loadChannelVideos(channel);
 
-                    // Create thumbnail image if available
-                    if (channel.thumbnail)
-                    {
-                        let img = document.createElement('img');
-                        img.src = channel.thumbnail;
-                        img.alt = `Thumbnail for ${channel.displayName}`;
-                        div.appendChild(img);
-                    }
+                    // Latest video thumbnail, else the channel avatar, else a placeholder.
+                    const sources = [latestThumbnails[i], channelAvatarPath(channel)]
+                        .filter(path => path)
+                        .map(path => `${BASE_URL}${path}`);
+                    sources.push(CHANNEL_PLACEHOLDER_IMAGE);
+
+                    let img = document.createElement('img');
+                    img.alt = `Thumbnail for ${channel.displayName}`;
+                    let attempt = 0;
+                    img.onerror = () => {
+                        attempt++;
+                        if (attempt < sources.length)
+                        {
+                            img.src = sources[attempt];
+                        }
+                    };
+                    img.src = sources[0];
+                    div.appendChild(img);
+
+                    let p = document.createElement('p');
+                    p.textContent = channel.displayName ?? "";
+                    div.appendChild(p);
 
                     listEl.appendChild(div);
                 });
