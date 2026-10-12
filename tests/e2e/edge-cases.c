@@ -104,6 +104,15 @@ static const struct scenario SCENARIOS[] = {
           "await until(() => document.querySelectorAll('#content-list .video-item').length === 1);"
           "return 'items=' + document.querySelectorAll('#content-list .video-item').length + ';warn=' + window.__warn;",
           "items=1;warn=2" },
+        { TEXT, "the index counts only the valid video", "#top-bar .current-index", "1/1" },
+        { CLICK, "the valid video starts", "#content-list .video-item", NULL },
+        { WAIT, "its embed is loaded", "#embed-player[src*=\"/videos/embed/\"]", NULL },
+        { CLICK, "next stays on the only valid video", "#btn_next_top", NULL },
+        { EVAL, "the embed is still a real video and the index is 1/1",
+          "await sleep(500);"
+          "return 'embed=' + document.getElementById('embed-player').getAttribute('src').includes('/videos/embed/')"
+          "  + ';index=' + document.querySelector('#top-bar .current-index').textContent;",
+          "embed=true;index=1/1" },
         { END, NULL, NULL, NULL } } },
 
     { "video without a description", {
