@@ -9,6 +9,11 @@ set -eu
 base="${KIDUI_BASE_URL:?KIDUI_BASE_URL is required}"
 status=0
 
+# The embed paths in the order the page lists them (the suggested view).
+api="$(printf '%s' "$base" | sed 's|/kidui$||')"
+embed1="$(curl -fsS "$api/api/v1/videos?sort=-views&count=100" | jq -r '.data[0].embedPath')"
+embed2="$(curl -fsS "$api/api/v1/videos?sort=-views&count=100" | jq -r '.data[1].embedPath')"
+
 # check NAME OPERATION...: runs browser-drive from a fresh page load of the app.
 check() {
 	name="$1"
@@ -41,11 +46,18 @@ check "a video starts the embedded player and shows its index" \
 	--wait '#embed-player[src*="/videos/embed/"]' \
 	--expect-text '#top-bar .current-index=1/2'
 
-check "next and previous move the index" \
+check "playing a video hides the list and loads that video's embed" \
 	--wait '#content-list .video-item' --click '#content-list .video-item' \
-	--wait '#embed-player[src*="/videos/embed/"]' \
+	--wait "#embed-player[src^=\"$embed1\"]" \
+	--wait '#content-list[style*="display: none"]'
+
+check "next and previous move the index and reload the embed" \
+	--wait '#content-list .video-item' --click '#content-list .video-item' \
+	--wait "#embed-player[src^=\"$embed1\"]" \
 	--click '#btn_next_top' --expect-text '#top-bar .current-index=2/2' \
-	--click '#btn_prev_top' --expect-text '#top-bar .current-index=1/2'
+	--wait "#embed-player[src^=\"$embed2\"]" \
+	--click '#btn_prev_top' --expect-text '#top-bar .current-index=1/2' \
+	--wait "#embed-player[src^=\"$embed1\"]"
 
 check "the repeat button toggles its look" \
 	--click '#btn_repeat' --wait '#btn_repeat[style*="208, 221, 208"]' \
